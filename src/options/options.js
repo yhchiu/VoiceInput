@@ -1,5 +1,20 @@
 (function () {
   const t = globalThis.vt;
+  const CHANGELOG_FILE = 'CHANGELOG.json';
+  const CHANGELOG_REPO_URL = 'https://github.com/yhchiu/VoiceInput';
+  const RELEASE_TYPE_LABELS = {
+    feat: 'Added',
+    fix: 'Fixed',
+    refactor: 'Changed',
+    perf: 'Changed',
+    style: 'Changed',
+    docs: 'Documentation',
+    test: 'Maintenance',
+    build: 'Maintenance',
+    ci: 'Maintenance',
+    chore: 'Maintenance',
+    revert: 'Reverted',
+  };
 
   function applyI18n() {
     document.querySelectorAll('[data-i18n]').forEach((el) => {
@@ -100,6 +115,122 @@
       ? chrome.runtime.getManifest().version
       : '';
     document.getElementById('about-version').textContent = version;
+  }
+
+  function getReleaseTypeLabel(type) {
+    return RELEASE_TYPE_LABELS[String(type || '').toLowerCase()] || 'Changed';
+  }
+
+  function formatChangelogText(subject) {
+    const text = String(subject || '')
+      .split('\n')[0]
+      .replace(/^[a-z][a-z0-9-]*(\([^)]+\))?!?:\s*/i, '')
+      .trim();
+    if (!text) return '';
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  function getCommitUrl(item) {
+    const commit = String(item.commit || '').trim();
+    if (!commit) return '';
+    return `${CHANGELOG_REPO_URL}/commit/${encodeURIComponent(commit)}`;
+  }
+
+  function renderChangelog(entries, isError = false) {
+    const list = document.getElementById('changelog');
+    const empty = document.getElementById('changelog-empty');
+    if (!list || !empty) return;
+
+    list.textContent = '';
+    if (isError) {
+      empty.textContent = t('optChangelogLoadFailed');
+      empty.hidden = false;
+      return;
+    }
+
+    const releases = Array.isArray(entries) ? entries : [];
+    if (!releases.length) {
+      empty.textContent = t('optChangelogEmpty');
+      empty.hidden = false;
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    releases.forEach((release) => {
+      const items = Array.isArray(release.items) ? release.items : [];
+      const releaseSection = document.createElement('section');
+      releaseSection.className = 'changelog-release';
+
+      const header = document.createElement('div');
+      header.className = 'changelog-release-header';
+
+      const version = document.createElement('h2');
+      version.className = 'changelog-release-version';
+      version.textContent = release.version ? `v${release.version}` : '';
+      header.appendChild(version);
+
+      if (release.date) {
+        const date = document.createElement('span');
+        date.className = 'changelog-release-date';
+        date.textContent = release.date;
+        header.appendChild(date);
+      }
+
+      const itemList = document.createElement('div');
+      itemList.className = 'changelog-items';
+
+      items.forEach((item) => {
+        const text = formatChangelogText(item.subject);
+        if (!text) return;
+
+        const url = getCommitUrl(item);
+        const row = document.createElement(url ? 'a' : 'div');
+        row.className = 'changelog-item';
+        if (url) {
+          row.href = url;
+          row.target = '_blank';
+          row.rel = 'noopener noreferrer';
+        }
+
+        const type = document.createElement('span');
+        type.className = 'changelog-type';
+        type.textContent = getReleaseTypeLabel(item.type);
+        row.appendChild(type);
+
+        const description = document.createElement('span');
+        description.className = 'changelog-text';
+        description.textContent = text;
+        row.appendChild(description);
+
+        if (item.commit) {
+          const commit = document.createElement('span');
+          commit.className = 'changelog-commit';
+          commit.textContent = String(item.commit).slice(0, 7);
+          row.appendChild(commit);
+        }
+
+        itemList.appendChild(row);
+      });
+
+      if (!itemList.childElementCount) return;
+      releaseSection.appendChild(header);
+      releaseSection.appendChild(itemList);
+      fragment.appendChild(releaseSection);
+    });
+
+    list.appendChild(fragment);
+    empty.textContent = t('optChangelogEmpty');
+    empty.hidden = Boolean(list.childElementCount);
+  }
+
+  async function loadChangelog() {
+    try {
+      const response = await fetch(chrome.runtime.getURL(CHANGELOG_FILE));
+      if (!response.ok) throw new Error('changelog-load-failed');
+      renderChangelog(await response.json());
+    } catch (_) {
+      renderChangelog([], true);
+    }
   }
 
   function formatDateStamp(date) {
@@ -312,6 +443,7 @@
     applyI18n();
     setupTabs();
     loadAboutInfo();
+    loadChangelog();
     await load();
 
     const max = document.getElementById('maxAlternatives');

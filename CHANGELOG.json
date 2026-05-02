@@ -1,0 +1,58 @@
+[
+  {
+    "version": "1.0.0",
+    "date": "2026-05-03",
+    "items": [
+      {
+        "commit": "9b535501e68ae65734748d2d1d2540ddf9b38313",
+        "type": "feat",
+        "subject": "feat: anchor interim preview near input"
+      },
+      {
+        "commit": "6897ead8a2d18bf8705bf3525fd6a3eaabbbc3f2",
+        "type": "feat",
+        "subject": "feat: add about settings page"
+      },
+      {
+        "commit": "6da7df35d5799e6cce18100d7703dfeadf6da3cc",
+        "type": "feat",
+        "subject": "feat: add settings management"
+      },
+      {
+        "commit": "ee792ae024b5866499e20cdea7d27c48d5d0fd9d",
+        "type": "fix",
+        "subject": "fix: localize auto language label"
+      },
+      {
+        "commit": "3efd56d212f37f83f6a90a0140aa71b84ccdc51c",
+        "type": "feat",
+        "subject": "feat: add text replacement rules"
+      },
+      {
+        "commit": "8a3f13a9a11babed0985bbf6ffd69b76e7bc3cf0",
+        "type": "feat",
+        "subject": "feat: choose recognition language in popup"
+      },
+      {
+        "commit": "daa8d992acc5accd1ebb1747ca5e0f1808aa13e2",
+        "type": "feat",
+        "subject": "feat: show native language labels"
+      },
+      {
+        "commit": "b035976829afc566aeb9e747ff9404e554b9acb7",
+        "type": "fix",
+        "subject": "fix: show interim recognition text"
+      },
+      {
+        "commit": "df3830f96f2554d72f9df97f1e19d29d51f46991",
+        "type": "fix",
+        "subject": "fix: show stop action while listening"
+      },
+      {
+        "commit": "03561e9925d06642cb38f3ec39a8d39038ea6a5e",
+        "type": "fix",
+        "subject": "fix: handle continuous recognition results"
+      }
+    ]
+  }
+]
