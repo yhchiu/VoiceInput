@@ -1,5 +1,16 @@
 [
   {
+    "version": "1.0.1",
+    "date": "2026-05-03",
+    "items": [
+      {
+        "commit": "13bb61cf1c56366660bce085c12047950991ab13",
+        "type": "feat",
+        "subject": "feat: add offline changelog page"
+      }
+    ]
+  },
+  {
     "version": "1.0.0",
     "date": "2026-05-03",
     "items": [
