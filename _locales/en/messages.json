@@ -9,6 +9,7 @@
   "pickerHintEnter": { "message": "Enter insert" },
   "pickerNoTarget": { "message": "Focus an input field first." },
   "pickerTargetGone": { "message": "Target field is no longer available." },
+  "interimPreviewTitle": { "message": "Recognition preview" },
 
   "errNoSpeech": { "message": "No speech detected. Try again." },
   "errAudioCapture": { "message": "No microphone available." },

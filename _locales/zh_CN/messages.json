@@ -9,6 +9,7 @@
   "pickerHintEnter": { "message": "Enter 写入" },
   "pickerNoTarget": { "message": "请先点选输入栏" },
   "pickerTargetGone": { "message": "目标栏位已不存在" },
+  "interimPreviewTitle": { "message": "识别预览" },
 
   "errNoSpeech": { "message": "没听到语音，请再试一次" },
   "errAudioCapture": { "message": "找不到麦克风" },

@@ -16,6 +16,7 @@
   let activeRecognizer = null;
   let activePicker = null;
   let activeListening = null;
+  let activeInterimPreview = null;
 
   // === focus tracking ===
   function captureSelection(el) {
@@ -67,6 +68,9 @@
   }
   function disposeListening() {
     if (activeListening) { try { activeListening.dispose(); } catch (_) {} activeListening = null; }
+  }
+  function disposeInterimPreview() {
+    if (activeInterimPreview) { try { activeInterimPreview.dispose(); } catch (_) {} activeInterimPreview = null; }
   }
 
   // === Insertion ===
@@ -162,6 +166,7 @@
   // === Session lifecycle ===
   function endSession() {
     disposeListening();
+    disposeInterimPreview();
     if (activeRecognizer) {
       try { activeRecognizer.abort(); } catch (_) {}
       activeRecognizer = null;
@@ -198,16 +203,20 @@
       },
       onResult: (alternatives) => {
         if (!settings.continuous) disposeListening();
-        if (activeListening && activeListening.updateInterim) activeListening.updateInterim('');
+        if (activeInterimPreview) activeInterimPreview.update('');
         handleResults(alternatives);
       },
       onInterim: (text) => {
-        if (activeListening && activeListening.updateInterim) {
-          activeListening.updateInterim(text);
+        if (!activeInterimPreview && lastTarget && document.contains(lastTarget)) {
+          activeInterimPreview = globalThis.viMakeInterimPreview(lastTarget, t('interimPreviewTitle'));
+        }
+        if (activeInterimPreview) {
+          activeInterimPreview.update(text);
         }
       },
       onError: (error, message) => {
         disposeListening();
+        disposeInterimPreview();
         showError(error, message);
       },
       onEnd: () => {

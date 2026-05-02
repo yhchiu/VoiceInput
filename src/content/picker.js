@@ -1,5 +1,5 @@
-// Shadow-DOM picker, toast, and listening indicator.
-// Exposes globalThis.viMakePicker, globalThis.viMakeToast, globalThis.viMakeListening.
+// Shadow-DOM picker, toast, listening indicator, and interim preview.
+// Exposes globalThis.viMakePicker, viMakeToast, viMakeListening, and viMakeInterimPreview.
 (function () {
   const SHADOW_CSS = `
     :host { all: initial; }
@@ -116,8 +116,7 @@
       font: 11px/1.25 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-weight: 600;
       display: flex;
-      flex-direction: column;
-      align-items: stretch;
+      align-items: center;
       gap: 6px;
       max-width: min(420px, calc(100vw - 32px));
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
@@ -131,16 +130,26 @@
       width: 8px; height: 8px; border-radius: 50%; background: #fff;
       animation: vi-pulse 1.2s ease-in-out infinite;
     }
-    .vi-listening-interim {
-      color: rgba(255, 255, 255, 0.92);
-      font-size: 12px;
-      font-weight: 500;
-      line-height: 1.35;
-      max-width: 360px;
+    .vi-interim-preview {
+      position: fixed;
+      z-index: 2147483647;
+      min-width: 240px;
+      max-width: min(480px, calc(100vw - 16px));
+      overflow: hidden;
+      border: 1px solid rgba(124, 58, 237, 0.28);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.98);
+      color: #334155;
+      font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Microsoft JhengHei", "PingFang TC", "PingFang SC", sans-serif;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.08);
       white-space: pre-wrap;
       word-break: break-word;
+      pointer-events: none;
     }
-    .vi-listening-interim[hidden] { display: none; }
+    .vi-interim-preview[hidden] { display: none; }
+    .vi-interim-body {
+      padding: 8px 12px 10px 12px;
+    }
     @keyframes vi-pulse {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.4; transform: scale(0.75); }
@@ -374,24 +383,84 @@
     text.textContent = label;
     status.appendChild(text);
     wrap.appendChild(status);
-    const interim = document.createElement('div');
-    interim.className = 'vi-listening-interim';
-    interim.setAttribute('aria-live', 'polite');
-    interim.hidden = true;
-    wrap.appendChild(interim);
     shadow.appendChild(wrap);
     document.body.appendChild(host);
     return {
-      updateInterim(value) {
-        const next = typeof value === 'string' ? value.trim() : '';
-        interim.textContent = next;
-        interim.hidden = next.length === 0;
-      },
       dispose() { try { host.remove(); } catch (_) {} }
     };
+  }
+
+  function makeInterimPreview(anchor, titleText) {
+    const { host, shadow } = makeShadowHost();
+    const panel = document.createElement('div');
+    panel.className = 'vi-interim-preview';
+    panel.setAttribute('aria-live', 'polite');
+    panel.hidden = true;
+    const header = document.createElement('div');
+    header.className = 'vi-picker-header';
+    const title = document.createElement('span');
+    title.className = 'vi-picker-title';
+    title.textContent = titleText;
+    header.appendChild(title);
+    panel.appendChild(header);
+    const body = document.createElement('div');
+    body.className = 'vi-interim-body';
+    panel.appendChild(body);
+    shadow.appendChild(panel);
+
+    function position() {
+      if (!anchor || !document.contains(anchor)) {
+        panel.hidden = true;
+        return;
+      }
+
+      const rect = anchor.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const targetWidth = Math.max(240, Math.min(480, rect.width || 320, vw - 16));
+
+      panel.style.width = targetWidth + 'px';
+      panel.style.left = '-9999px';
+      panel.style.top = '-9999px';
+
+      const panelRect = panel.getBoundingClientRect();
+      const pw = panelRect.width || targetWidth;
+      const ph = panelRect.height || 48;
+      let x = rect.left;
+      let y = rect.bottom + 6;
+
+      if (x + pw > vw - 8) x = Math.max(8, vw - pw - 8);
+      if (x < 8) x = 8;
+      if (y + ph > vh - 8 && rect.top - ph - 6 >= 8) y = rect.top - ph - 6;
+      if (y < 8) y = 8;
+      if (y + ph > vh - 8) y = Math.max(8, vh - ph - 8);
+
+      panel.style.left = x + 'px';
+      panel.style.top = y + 'px';
+    }
+
+    function update(text) {
+      const next = typeof text === 'string' ? text.trim() : '';
+      body.textContent = next;
+      panel.hidden = next.length === 0;
+      if (!panel.hidden) requestAnimationFrame(position);
+    }
+
+    function dispose() {
+      window.removeEventListener('resize', position);
+      window.removeEventListener('scroll', position, true);
+      try { host.remove(); } catch (_) {}
+    }
+
+    window.addEventListener('resize', position);
+    window.addEventListener('scroll', position, true);
+    document.body.appendChild(host);
+
+    return { update, dispose };
   }
 
   globalThis.viMakePicker = makePicker;
   globalThis.viMakeToast = makeToast;
   globalThis.viMakeListening = makeListening;
+  globalThis.viMakeInterimPreview = makeInterimPreview;
 })();

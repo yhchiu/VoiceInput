@@ -9,6 +9,7 @@
   "pickerHintEnter": { "message": "Enter 寫入" },
   "pickerNoTarget": { "message": "請先點選輸入欄位" },
   "pickerTargetGone": { "message": "目標欄位已不存在" },
+  "interimPreviewTitle": { "message": "辨識預覽" },
 
   "errNoSpeech": { "message": "沒聽到語音，請再試一次" },
   "errAudioCapture": { "message": "找不到麥克風" },
