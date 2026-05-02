@@ -111,19 +111,36 @@
       right: 16px;
       background: #ef4444;
       color: #fff;
-      padding: 6px 12px;
-      border-radius: 999px;
-      font: 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font: 11px/1.25 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      max-width: min(420px, calc(100vw - 32px));
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+    }
+    .vi-listening-status {
       display: flex;
       align-items: center;
       gap: 6px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
     }
     .vi-listening-dot {
       width: 8px; height: 8px; border-radius: 50%; background: #fff;
       animation: vi-pulse 1.2s ease-in-out infinite;
     }
+    .vi-listening-interim {
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.35;
+      max-width: 360px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .vi-listening-interim[hidden] { display: none; }
     @keyframes vi-pulse {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.4; transform: scale(0.75); }
@@ -348,15 +365,28 @@
     const { host, shadow } = makeShadowHost();
     const wrap = document.createElement('div');
     wrap.className = 'vi-listening';
+    const status = document.createElement('div');
+    status.className = 'vi-listening-status';
     const dot = document.createElement('span');
     dot.className = 'vi-listening-dot';
-    wrap.appendChild(dot);
+    status.appendChild(dot);
     const text = document.createElement('span');
     text.textContent = label;
-    wrap.appendChild(text);
+    status.appendChild(text);
+    wrap.appendChild(status);
+    const interim = document.createElement('div');
+    interim.className = 'vi-listening-interim';
+    interim.setAttribute('aria-live', 'polite');
+    interim.hidden = true;
+    wrap.appendChild(interim);
     shadow.appendChild(wrap);
     document.body.appendChild(host);
     return {
+      updateInterim(value) {
+        const next = typeof value === 'string' ? value.trim() : '';
+        interim.textContent = next;
+        interim.hidden = next.length === 0;
+      },
       dispose() { try { host.remove(); } catch (_) {} }
     };
   }

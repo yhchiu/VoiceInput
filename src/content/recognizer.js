@@ -39,9 +39,17 @@
       if (!r.continuous && resultSent) return;
 
       const start = Math.max(Number(event.resultIndex) || 0, nextResultIndex);
+      let interimText = '';
       for (let resultIndex = start; resultIndex < event.results.length; resultIndex++) {
         const result = event.results[resultIndex];
-        if (!result || !result.isFinal) continue;
+        if (!result) continue;
+
+        if (!result.isFinal) {
+          if (r.interimResults && result[0] && result[0].transcript) {
+            interimText += result[0].transcript;
+          }
+          continue;
+        }
 
         const alternatives = [];
         for (let i = 0; i < result.length; i++) {
@@ -55,6 +63,10 @@
         resultSent = true;
         try { opts.onResult && opts.onResult(alternatives); } catch (_) {}
         if (!r.continuous) return;
+      }
+
+      if (r.interimResults) {
+        try { opts.onInterim && opts.onInterim(interimText); } catch (_) {}
       }
     };
 

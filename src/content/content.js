@@ -193,7 +193,13 @@
       },
       onResult: (alternatives) => {
         if (!settings.continuous) disposeListening();
+        if (activeListening && activeListening.updateInterim) activeListening.updateInterim('');
         handleResults(alternatives);
+      },
+      onInterim: (text) => {
+        if (activeListening && activeListening.updateInterim) {
+          activeListening.updateInterim(text);
+        }
       },
       onError: (error, message) => {
         disposeListening();
