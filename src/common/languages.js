@@ -56,13 +56,13 @@
     return label ? `${code} (${label})` : code;
   }
 
-  function buildLangOptions(select, currentLang) {
+  function buildLangOptions(select, currentLang, autoLabel = 'Auto') {
     select.innerHTML = '';
     const navLang = navigator.language || 'en-US';
 
     const auto = document.createElement('option');
     auto.value = navLang;
-    auto.textContent = `Auto (${formatLangLabel(navLang)})`;
+    auto.textContent = `${autoLabel} (${formatLangLabel(navLang)})`;
     select.appendChild(auto);
 
     const seen = new Set([navLang]);

@@ -23,6 +23,7 @@
   "optMaxAlternatives": { "message": "最大候选数（1–10）" },
   "optMaxAlternativesHint": { "message": "向识别引擎请求的候选结果数量。浏览器可能返回少于你请求的候选数。设为 1 时直接写入结果，不显示挑选界面。" },
   "optLang": { "message": "识别语言" },
+  "optLangAuto": { "message": "自动" },
   "optAutoInsertIfSingle": { "message": "引擎只回 1 个候选时自动写入" },
   "optContinuous": { "message": "连续模式" },
   "optContinuousHint": { "message": "持续监听直到你手动停止。输入助手场景不建议启用。" },

@@ -41,7 +41,7 @@
 
   async function loadSettings() {
     const settings = await globalThis.viGetSettings();
-    globalThis.viBuildLangOptions(document.getElementById('lang'), settings.lang);
+    globalThis.viBuildLangOptions(document.getElementById('lang'), settings.lang, t('optLangAuto'));
   }
 
   document.addEventListener('DOMContentLoaded', async () => {

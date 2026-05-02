@@ -23,6 +23,7 @@
   "optMaxAlternatives": { "message": "最大候選數（1–10）" },
   "optMaxAlternativesHint": { "message": "向辨識引擎請求的候選結果數量。瀏覽器可能回傳少於你請求的候選數。設為 1 時會直接寫入結果，不顯示挑選介面。" },
   "optLang": { "message": "辨識語言" },
+  "optLangAuto": { "message": "自動" },
   "optAutoInsertIfSingle": { "message": "引擎只回 1 個候選時自動寫入" },
   "optContinuous": { "message": "連續模式" },
   "optContinuousHint": { "message": "持續監聽直到你手動停止。輸入助手情境不建議啟用。" },

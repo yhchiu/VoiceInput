@@ -23,6 +23,7 @@
   "optMaxAlternatives": { "message": "Max alternatives (1–10)" },
   "optMaxAlternativesHint": { "message": "Number of candidate results to request. The browser may return fewer alternatives than you request. When set to 1, the result is inserted directly without showing the picker." },
   "optLang": { "message": "Recognition language" },
+  "optLangAuto": { "message": "Auto" },
   "optAutoInsertIfSingle": { "message": "Auto-insert when only one alternative is returned" },
   "optContinuous": { "message": "Continuous mode" },
   "optContinuousHint": { "message": "Keep listening until you stop manually. Not recommended for input-helper UX." },

@@ -9,7 +9,7 @@
   }
 
   function buildLangOptions(currentLang) {
-    globalThis.viBuildLangOptions(document.getElementById('lang'), currentLang);
+    globalThis.viBuildLangOptions(document.getElementById('lang'), currentLang, t('optLangAuto'));
   }
 
   function createReplacementInput(labelKey, className, value) {
