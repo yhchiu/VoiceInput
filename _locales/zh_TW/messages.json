@@ -41,6 +41,7 @@
 
   "popupTitle": { "message": "語音輸入" },
   "popupStart": { "message": "開始語音輸入" },
+  "popupStop": { "message": "停止語音輸入" },
   "popupListening": { "message": "辨識中…" },
   "popupIdle": { "message": "閒置" },
   "popupEnableMic": { "message": "啟用麥克風" },

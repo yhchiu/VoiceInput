@@ -41,6 +41,7 @@
 
   "popupTitle": { "message": "Voice Input" },
   "popupStart": { "message": "Start voice input" },
+  "popupStop": { "message": "Stop voice input" },
   "popupListening": { "message": "Listening…" },
   "popupIdle": { "message": "Idle" },
   "popupEnableMic": { "message": "Enable microphone" },
