@@ -1,0 +1,60 @@
+{
+  "extName": { "message": "語音輸入" },
+  "extDesc": { "message": "透過 Web Speech API 將語音辨識為文字輸入到網頁，可挑選候選辨識結果。" },
+  "cmdToggle": { "message": "開始 / 停止語音辨識" },
+
+  "pickerTitle": { "message": "選擇辨識結果" },
+  "pickerEmpty": { "message": "沒有候選結果" },
+  "pickerHintEsc": { "message": "Esc 取消" },
+  "pickerHintEnter": { "message": "Enter 寫入" },
+  "pickerNoTarget": { "message": "請先點選輸入欄位" },
+  "pickerTargetGone": { "message": "目標欄位已不存在" },
+
+  "errNoSpeech": { "message": "沒聽到語音，請再試一次" },
+  "errAudioCapture": { "message": "找不到麥克風" },
+  "errNotAllowed": { "message": "麥克風權限被拒" },
+  "errNetwork": { "message": "網路錯誤，無法連線辨識服務" },
+  "errLangNotSupported": { "message": "瀏覽器不支援該語言" },
+  "errUnknown": { "message": "辨識發生錯誤" },
+  "errMicHintPrompt": { "message": "請點選網址列旁的麥克風圖示，允許此網站使用麥克風。" },
+  "errMicHintDenied": { "message": "此網站的麥克風已被封鎖。請點選網址列旁的圖示，重設此網站的麥克風權限。" },
+
+  "optTitle": { "message": "語音輸入 — 設定" },
+  "optMaxAlternatives": { "message": "最大候選數（1–10）" },
+  "optMaxAlternativesHint": { "message": "向辨識引擎請求的候選結果數量。瀏覽器可能回傳少於你請求的候選數。設為 1 時會直接寫入結果，不顯示挑選介面。" },
+  "optLang": { "message": "辨識語言" },
+  "optAutoInsertIfSingle": { "message": "引擎只回 1 個候選時自動寫入" },
+  "optContinuous": { "message": "連續模式" },
+  "optContinuousHint": { "message": "持續監聽直到你手動停止。輸入助手情境不建議啟用。" },
+  "optInterimResults": { "message": "顯示中間結果" },
+  "optInterimResultsHint": { "message": "說話時即時顯示尚未確定的辨識文字。在挑選介面中可能顯得雜亂。" },
+  "optResetTitle": { "message": "重設設定" },
+  "optResetHint": { "message": "將所有選項恢復為預設值。這個動作會覆蓋目前的設定。" },
+  "optReset": { "message": "重設為預設值" },
+  "optResetConfirm": { "message": "確定要將所有設定重設為預設值嗎？目前的設定會被覆蓋。" },
+  "optSaved": { "message": "已儲存" },
+  "optGeneral": { "message": "一般" },
+  "optAdvanced": { "message": "進階" },
+  "optShortcutsTitle": { "message": "鍵盤快捷鍵" },
+  "optShortcutsHint": { "message": "請至 Chrome 擴充功能的快捷鍵頁面設定切換快捷鍵。" },
+  "optOpenShortcuts": { "message": "自訂快捷鍵" },
+
+  "popupTitle": { "message": "語音輸入" },
+  "popupStart": { "message": "開始語音輸入" },
+  "popupListening": { "message": "辨識中…" },
+  "popupIdle": { "message": "閒置" },
+  "popupEnableMic": { "message": "啟用麥克風" },
+  "popupOpenOptions": { "message": "設定" },
+  "popupHint": { "message": "提示：請先將焦點停在輸入欄，再按快捷鍵。" },
+
+  "permTitle": { "message": "啟用麥克風" },
+  "permDesc": { "message": "請點下方按鈕授權麥克風存取。只需授權一次即可。" },
+  "permGrant": { "message": "授權麥克風" },
+  "permGranted": { "message": "麥克風已啟用，可關閉此分頁。" },
+  "permDenied": { "message": "授權被拒，請至瀏覽器設定修改。" },
+
+  "toastInserted": {
+    "message": "已寫入：$TEXT$",
+    "placeholders": { "text": { "content": "$1", "example": "你好" } }
+  }
+}

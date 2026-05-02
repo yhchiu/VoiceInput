@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="options.css">
+    <title>Voice Input — Settings</title>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+              <path d="M5 11a7 7 0 0 0 14 0"></path>
+              <line x1="12" y1="18" x2="12" y2="22"></line>
+              <line x1="8" y1="22" x2="16" y2="22"></line>
+            </svg>
+          </span>
+          <h1 data-i18n="optTitle"></h1>
+        </div>
+      </header>
+
+      <div class="layout">
+        <nav class="sidebar" role="tablist" aria-label="Settings sections">
+          <button class="nav-item is-active" data-tab="general" role="tab" aria-selected="true">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"></path>
+              </svg>
+            </span>
+            <span data-i18n="optGeneral"></span>
+          </button>
+          <button class="nav-item" data-tab="advanced" role="tab" aria-selected="false">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+            </span>
+            <span data-i18n="optAdvanced"></span>
+          </button>
+        </nav>
+
+        <main class="panel">
+          <section class="tab-pane is-active" data-tab="general" role="tabpanel">
+            <div class="field">
+              <label for="maxAlternatives" data-i18n="optMaxAlternatives"></label>
+              <input type="number" id="maxAlternatives" min="1" max="10" step="1">
+              <p class="hint" data-i18n="optMaxAlternativesHint"></p>
+            </div>
+
+            <div class="field toggle-row">
+              <div class="toggle-text">
+                <span class="toggle-label" data-i18n="optAutoInsertIfSingle"></span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="autoInsertIfSingle">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="field">
+              <label for="lang" data-i18n="optLang"></label>
+              <select id="lang"></select>
+            </div>
+          </section>
+
+          <section class="tab-pane" data-tab="advanced" role="tabpanel" hidden>
+            <div class="field toggle-row">
+              <div class="toggle-text">
+                <span class="toggle-label" data-i18n="optContinuous"></span>
+                <p class="hint" data-i18n="optContinuousHint"></p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="continuous">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="field toggle-row">
+              <div class="toggle-text">
+                <span class="toggle-label" data-i18n="optInterimResults"></span>
+                <p class="hint" data-i18n="optInterimResultsHint"></p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="interimResults">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="field">
+              <label data-i18n="optShortcutsTitle"></label>
+              <p class="hint" data-i18n="optShortcutsHint"></p>
+              <button id="open-shortcuts" class="ghost" data-i18n="optOpenShortcuts"></button>
+            </div>
+
+            <div class="field">
+              <label data-i18n="optResetTitle"></label>
+              <p class="hint" data-i18n="optResetHint"></p>
+              <button id="reset" class="ghost" data-i18n="optReset"></button>
+            </div>
+          </section>
+
+          <footer class="actions">
+            <span id="saved" class="saved" hidden>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span data-i18n="optSaved"></span>
+            </span>
+          </footer>
+        </main>
+      </div>
+    </div>
+
+    <script src="../common/messages.js"></script>
+    <script src="../common/settings.js"></script>
+    <script src="../common/i18n.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

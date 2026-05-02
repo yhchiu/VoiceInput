@@ -1,0 +1,60 @@
+{
+  "extName": { "message": "Voice Input" },
+  "extDesc": { "message": "Voice-to-text input for any web page using the Web Speech API, with selectable alternatives." },
+  "cmdToggle": { "message": "Start / stop voice recognition" },
+
+  "pickerTitle": { "message": "Pick a result" },
+  "pickerEmpty": { "message": "No alternatives" },
+  "pickerHintEsc": { "message": "Esc cancel" },
+  "pickerHintEnter": { "message": "Enter insert" },
+  "pickerNoTarget": { "message": "Focus an input field first." },
+  "pickerTargetGone": { "message": "Target field is no longer available." },
+
+  "errNoSpeech": { "message": "No speech detected. Try again." },
+  "errAudioCapture": { "message": "No microphone available." },
+  "errNotAllowed": { "message": "Microphone permission denied." },
+  "errNetwork": { "message": "Network error — speech engine unreachable." },
+  "errLangNotSupported": { "message": "Language not supported by your browser." },
+  "errUnknown": { "message": "Recognition error." },
+  "errMicHintPrompt": { "message": "Click the microphone icon next to the address bar to allow access on this site." },
+  "errMicHintDenied": { "message": "Microphone is blocked for this site. Click the icon next to the address bar and reset the permission." },
+
+  "optTitle": { "message": "Voice Input — Settings" },
+  "optMaxAlternatives": { "message": "Max alternatives (1–10)" },
+  "optMaxAlternativesHint": { "message": "Number of candidate results to request. The browser may return fewer alternatives than you request. When set to 1, the result is inserted directly without showing the picker." },
+  "optLang": { "message": "Recognition language" },
+  "optAutoInsertIfSingle": { "message": "Auto-insert when only one alternative is returned" },
+  "optContinuous": { "message": "Continuous mode" },
+  "optContinuousHint": { "message": "Keep listening until you stop manually. Not recommended for input-helper UX." },
+  "optInterimResults": { "message": "Show interim results" },
+  "optInterimResultsHint": { "message": "Display partial transcriptions while you speak. May feel noisy in the picker." },
+  "optResetTitle": { "message": "Reset settings" },
+  "optResetHint": { "message": "Restore all options to their default values. This will overwrite your current settings." },
+  "optReset": { "message": "Reset to defaults" },
+  "optResetConfirm": { "message": "Reset all settings to their defaults? Your current settings will be overwritten." },
+  "optSaved": { "message": "Saved" },
+  "optGeneral": { "message": "General" },
+  "optAdvanced": { "message": "Advanced" },
+  "optShortcutsTitle": { "message": "Keyboard shortcut" },
+  "optShortcutsHint": { "message": "Configure the toggle shortcut on Chrome's extensions shortcuts page." },
+  "optOpenShortcuts": { "message": "Customize shortcut" },
+
+  "popupTitle": { "message": "Voice Input" },
+  "popupStart": { "message": "Start voice input" },
+  "popupListening": { "message": "Listening…" },
+  "popupIdle": { "message": "Idle" },
+  "popupEnableMic": { "message": "Enable microphone" },
+  "popupOpenOptions": { "message": "Settings" },
+  "popupHint": { "message": "Tip: focus a field first, then press the shortcut." },
+
+  "permTitle": { "message": "Enable Microphone" },
+  "permDesc": { "message": "Click the button below to grant microphone access. You only need to do this once." },
+  "permGrant": { "message": "Grant access" },
+  "permGranted": { "message": "Microphone enabled. You can close this tab." },
+  "permDenied": { "message": "Permission denied. Please update your browser settings." },
+
+  "toastInserted": {
+    "message": "Inserted: $TEXT$",
+    "placeholders": { "text": { "content": "$1", "example": "hello world" } }
+  }
+}

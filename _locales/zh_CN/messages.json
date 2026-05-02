@@ -1,0 +1,60 @@
+{
+  "extName": { "message": "语音输入" },
+  "extDesc": { "message": "通过 Web Speech API 将语音识别为文字输入到网页，可挑选候选识别结果。" },
+  "cmdToggle": { "message": "开始 / 停止语音识别" },
+
+  "pickerTitle": { "message": "选择识别结果" },
+  "pickerEmpty": { "message": "没有候选结果" },
+  "pickerHintEsc": { "message": "Esc 取消" },
+  "pickerHintEnter": { "message": "Enter 写入" },
+  "pickerNoTarget": { "message": "请先点选输入栏" },
+  "pickerTargetGone": { "message": "目标栏位已不存在" },
+
+  "errNoSpeech": { "message": "没听到语音，请再试一次" },
+  "errAudioCapture": { "message": "找不到麦克风" },
+  "errNotAllowed": { "message": "麦克风权限被拒" },
+  "errNetwork": { "message": "网络错误，无法连接识别服务" },
+  "errLangNotSupported": { "message": "浏览器不支持该语言" },
+  "errUnknown": { "message": "识别发生错误" },
+  "errMicHintPrompt": { "message": "请点选网址栏旁的麦克风图标，允许此网站使用麦克风。" },
+  "errMicHintDenied": { "message": "此网站的麦克风已被封锁。请点选网址栏旁的图标，重设此网站的麦克风权限。" },
+
+  "optTitle": { "message": "语音输入 — 设置" },
+  "optMaxAlternatives": { "message": "最大候选数（1–10）" },
+  "optMaxAlternativesHint": { "message": "向识别引擎请求的候选结果数量。浏览器可能返回少于你请求的候选数。设为 1 时直接写入结果，不显示挑选界面。" },
+  "optLang": { "message": "识别语言" },
+  "optAutoInsertIfSingle": { "message": "引擎只回 1 个候选时自动写入" },
+  "optContinuous": { "message": "连续模式" },
+  "optContinuousHint": { "message": "持续监听直到你手动停止。输入助手场景不建议启用。" },
+  "optInterimResults": { "message": "显示中间结果" },
+  "optInterimResultsHint": { "message": "说话时实时显示尚未确定的识别文字。在挑选界面中可能显得杂乱。" },
+  "optResetTitle": { "message": "重置设置" },
+  "optResetHint": { "message": "将所有选项恢复为默认值。这个操作会覆盖目前的设置。" },
+  "optReset": { "message": "重置为默认值" },
+  "optResetConfirm": { "message": "确定要将所有设置重置为默认值吗？目前的设置会被覆盖。" },
+  "optSaved": { "message": "已保存" },
+  "optGeneral": { "message": "常规" },
+  "optAdvanced": { "message": "高级" },
+  "optShortcutsTitle": { "message": "键盘快捷键" },
+  "optShortcutsHint": { "message": "请到 Chrome 扩展程序的快捷键页面设置切换快捷键。" },
+  "optOpenShortcuts": { "message": "自定义快捷键" },
+
+  "popupTitle": { "message": "语音输入" },
+  "popupStart": { "message": "开始语音输入" },
+  "popupListening": { "message": "识别中…" },
+  "popupIdle": { "message": "闲置" },
+  "popupEnableMic": { "message": "启用麦克风" },
+  "popupOpenOptions": { "message": "设置" },
+  "popupHint": { "message": "提示：请先将焦点停在输入栏，再按快捷键。" },
+
+  "permTitle": { "message": "启用麦克风" },
+  "permDesc": { "message": "请点下方按钮授权麦克风访问。只需授权一次即可。" },
+  "permGrant": { "message": "授权麦克风" },
+  "permGranted": { "message": "麦克风已启用，可关闭此标签页。" },
+  "permDenied": { "message": "授权被拒，请到浏览器设置修改。" },
+
+  "toastInserted": {
+    "message": "已写入：$TEXT$",
+    "placeholders": { "text": { "content": "$1", "example": "你好" } }
+  }
+}
