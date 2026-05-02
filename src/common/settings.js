@@ -81,6 +81,12 @@
     return next;
   }
 
+  async function viReplaceSettings(value) {
+    const next = { ...DEFAULTS, ...normalize(value || {}) };
+    await chrome.storage.sync.set({ [KEY]: next });
+    return next;
+  }
+
   async function viResetSettings() {
     await chrome.storage.sync.remove(KEY);
     return { ...DEFAULTS };
@@ -91,5 +97,6 @@
   globalThis.viApplyReplacements = viApplyReplacements;
   globalThis.viGetSettings = viGetSettings;
   globalThis.viSetSettings = viSetSettings;
+  globalThis.viReplaceSettings = viReplaceSettings;
   globalThis.viResetSettings = viResetSettings;
 })();

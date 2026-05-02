@@ -122,6 +122,7 @@ body {
   color: var(--accent-strong);
   font-weight: 600;
 }
+.nav-item.is-bottom { margin-top: auto; }
 .nav-icon {
   display: inline-flex;
   align-items: center;
@@ -339,6 +340,37 @@ button.ghost.danger:hover {
 }
 .empty-state[hidden] { display: none; }
 
+/* Settings management */
+.management-status {
+  margin: 12px 0 0 0;
+  color: var(--success);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+.management-status.is-error {
+  color: #b91c1c;
+}
+.management-status[hidden] { display: none; }
+.inline-link {
+  border: 0;
+  background: none;
+  color: var(--accent-strong);
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+}
+.inline-link:hover {
+  color: var(--accent);
+}
+.inline-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+  border-radius: 4px;
+}
+
 /* Footer actions */
 .actions {
   display: flex;
@@ -375,6 +407,7 @@ button.ghost.danger:hover {
     flex-direction: row;
     overflow-x: auto;
   }
+  .nav-item.is-bottom { margin-top: 0; }
   .nav-item { flex: 1 0 auto; justify-content: center; }
   .panel { padding: 8px 18px; }
   .replacement-row {
