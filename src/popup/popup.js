@@ -3,6 +3,7 @@
   const TARGETS = globalThis.VI_TARGETS;
   const t = globalThis.vt;
   let listening = false;
+  let restarting = false;
 
   function applyI18n() {
     document.querySelectorAll('[data-i18n]').forEach((el) => {
@@ -38,8 +39,14 @@
     button.setAttribute('aria-pressed', listening ? 'true' : 'false');
   }
 
+  async function loadSettings() {
+    const settings = await globalThis.viGetSettings();
+    globalThis.viBuildLangOptions(document.getElementById('lang'), settings.lang);
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     applyI18n();
+    await loadSettings();
     await refreshStatus();
 
     document.getElementById('start').addEventListener('click', async () => {
@@ -48,6 +55,22 @@
         action: listening ? MSG.STOP_RECOGNITION : MSG.START_RECOGNITION,
       });
       window.close();
+    });
+
+    document.getElementById('lang').addEventListener('change', async (e) => {
+      await globalThis.viSetSettings({ lang: e.target.value });
+      if (!listening || restarting) return;
+
+      restarting = true;
+      try {
+        await chrome.runtime.sendMessage({
+          target: TARGETS.BACKGROUND,
+          action: MSG.START_RECOGNITION,
+        });
+        await refreshStatus();
+      } finally {
+        restarting = false;
+      }
     });
 
     document.getElementById('open-options').addEventListener('click', () => {
