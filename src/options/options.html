@@ -51,7 +51,7 @@
             </span>
             <span data-i18n="optReplacements"></span>
           </button>
-          <button class="nav-item is-bottom" data-tab="settings-management" role="tab" aria-selected="false">
+          <button class="nav-item" data-tab="settings-management" role="tab" aria-selected="false">
             <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 20h9"></path>
@@ -59,6 +59,16 @@
               </svg>
             </span>
             <span data-i18n="optSettingsManagement"></span>
+          </button>
+          <button class="nav-item is-bottom" data-tab="about" role="tab" aria-selected="false">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+            </span>
+            <span data-i18n="optAbout"></span>
           </button>
         </nav>
 
@@ -146,6 +156,35 @@
               <label data-i18n="optResetTitle"></label>
               <p class="hint" data-i18n="optResetHint"></p>
               <button id="reset" class="ghost" data-i18n="optReset"></button>
+            </div>
+          </section>
+
+          <section class="tab-pane" data-tab="about" role="tabpanel" hidden>
+            <div class="field">
+              <label data-i18n="optAboutTitle"></label>
+              <div class="about-list">
+                <div class="about-row">
+                  <span class="about-label" data-i18n="optAboutVersion"></span>
+                  <span id="about-version" class="about-value"></span>
+                </div>
+                <div class="about-row">
+                  <span class="about-label" data-i18n="optAboutGithub"></span>
+                  <a class="about-link" href="https://github.com/yhchiu/VoiceInput" target="_blank" rel="noopener noreferrer">github.com/yhchiu/VoiceInput</a>
+                </div>
+                <div class="about-row">
+                  <span class="about-label" data-i18n="optAboutIssues"></span>
+                  <a class="about-link" href="https://github.com/yhchiu/VoiceInput/issues" target="_blank" rel="noopener noreferrer" data-i18n="optAboutIssuesLink"></a>
+                </div>
+                <div class="about-row">
+                  <span class="about-label" data-i18n="optAboutLicense"></span>
+                  <a class="about-link" href="https://github.com/yhchiu/VoiceInput/blob/master/LICENSE" target="_blank" rel="noopener noreferrer">GNU GPLv3</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label data-i18n="optAboutPrivacy"></label>
+              <p class="hint" data-i18n="optAboutPrivacyText"></p>
             </div>
           </section>
 

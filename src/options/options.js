@@ -95,6 +95,13 @@
     updateReplacementEmptyState();
   }
 
+  function loadAboutInfo() {
+    const version = chrome.runtime && typeof chrome.runtime.getManifest === 'function'
+      ? chrome.runtime.getManifest().version
+      : '';
+    document.getElementById('about-version').textContent = version;
+  }
+
   function formatDateStamp(date) {
     const y = String(date.getFullYear());
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -304,6 +311,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     applyI18n();
     setupTabs();
+    loadAboutInfo();
     await load();
 
     const max = document.getElementById('maxAlternatives');

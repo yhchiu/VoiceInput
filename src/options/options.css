@@ -371,6 +371,46 @@ button.ghost.danger:hover {
   border-radius: 4px;
 }
 
+/* About */
+.about-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+.about-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.35fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.about-row:last-child { border-bottom: 0; }
+.about-label {
+  color: var(--text-mute);
+  font-size: 12px;
+  font-weight: 600;
+}
+.about-value,
+.about-link {
+  min-width: 0;
+  color: var(--text);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.about-link {
+  color: var(--accent-strong);
+  font-weight: 600;
+  text-decoration: none;
+}
+.about-link:hover { text-decoration: underline; }
+.about-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+  border-radius: 4px;
+}
+
 /* Footer actions */
 .actions {
   display: flex;
@@ -413,5 +453,9 @@ button.ghost.danger:hover {
   .replacement-row {
     grid-template-columns: 1fr;
     align-items: stretch;
+  }
+  .about-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 }
