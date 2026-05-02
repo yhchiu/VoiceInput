@@ -80,6 +80,7 @@
       globalThis.viMakeToast(t('pickerTargetGone'));
       return;
     }
+    lastSelection = captureSelection(lastTarget) || lastSelection;
     const preview = text.length > 32 ? text.slice(0, 32) + '…' : text;
     globalThis.viMakeToast(t('toastInserted', preview));
   }
@@ -191,7 +192,7 @@
         activeListening = globalThis.viMakeListening(t('popupListening'));
       },
       onResult: (alternatives) => {
-        disposeListening();
+        if (!settings.continuous) disposeListening();
         handleResults(alternatives);
       },
       onError: (error, message) => {

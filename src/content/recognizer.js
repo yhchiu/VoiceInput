@@ -30,23 +30,32 @@
     r.interimResults = !!opts.interimResults;
 
     let resultSent = false;
+    let nextResultIndex = 0;
     let aborted = false;
 
     r.onstart = () => { try { opts.onStart && opts.onStart(); } catch (_) {} };
 
     r.onresult = (event) => {
-      const last = event.results[event.results.length - 1];
-      if (!last || !last.isFinal) return;
-      if (resultSent) return;
-      const alternatives = [];
-      for (let i = 0; i < last.length; i++) {
-        alternatives.push({
-          transcript: last[i].transcript,
-          confidence: typeof last[i].confidence === 'number' ? last[i].confidence : 0,
-        });
+      if (!r.continuous && resultSent) return;
+
+      const start = Math.max(Number(event.resultIndex) || 0, nextResultIndex);
+      for (let resultIndex = start; resultIndex < event.results.length; resultIndex++) {
+        const result = event.results[resultIndex];
+        if (!result || !result.isFinal) continue;
+
+        const alternatives = [];
+        for (let i = 0; i < result.length; i++) {
+          alternatives.push({
+            transcript: result[i].transcript,
+            confidence: typeof result[i].confidence === 'number' ? result[i].confidence : 0,
+          });
+        }
+
+        nextResultIndex = resultIndex + 1;
+        resultSent = true;
+        try { opts.onResult && opts.onResult(alternatives); } catch (_) {}
+        if (!r.continuous) return;
       }
-      resultSent = true;
-      try { opts.onResult && opts.onResult(alternatives); } catch (_) {}
     };
 
     r.onerror = (event) => {
