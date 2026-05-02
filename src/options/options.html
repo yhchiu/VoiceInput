@@ -40,6 +40,17 @@
             </span>
             <span data-i18n="optAdvanced"></span>
           </button>
+          <button class="nav-item" data-tab="replacements" role="tab" aria-selected="false">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 1l4 4-4 4"></path>
+                <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                <path d="M7 23l-4-4 4-4"></path>
+                <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+              </svg>
+            </span>
+            <span data-i18n="optReplacements"></span>
+          </button>
         </nav>
 
         <main class="panel">
@@ -63,6 +74,16 @@
             <div class="field">
               <label for="lang" data-i18n="optLang"></label>
               <select id="lang"></select>
+            </div>
+          </section>
+
+          <section class="tab-pane" data-tab="replacements" role="tabpanel" hidden>
+            <div class="field">
+              <label data-i18n="optReplacementsTitle"></label>
+              <p class="hint" data-i18n="optReplacementsHint"></p>
+              <div id="replacements" class="replacement-list"></div>
+              <p id="replacements-empty" class="empty-state" data-i18n="optReplacementsEmpty"></p>
+              <button id="add-replacement" class="ghost" data-i18n="optAddReplacement"></button>
             </div>
           </section>
 

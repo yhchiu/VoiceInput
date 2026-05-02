@@ -92,12 +92,17 @@
       return;
     }
     const settings = await globalThis.viGetSettings();
+    const replacementRules = settings.replacements || [];
+    const replacedAlternatives = alternatives.map((alt) => ({
+      ...alt,
+      transcript: globalThis.viApplyReplacements(alt.transcript, replacementRules),
+    }));
     const single = alternatives.length === 1;
     const auto = single && (settings.maxAlternatives === 1 || settings.autoInsertIfSingle);
     if (auto) {
-      performInsertion(alternatives[0].transcript);
+      performInsertion(replacedAlternatives[0].transcript);
     } else {
-      showPicker(alternatives);
+      showPicker(replacedAlternatives);
     }
   }
 
