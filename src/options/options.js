@@ -421,6 +421,7 @@
     document.getElementById('maxAlternatives').value = s.maxAlternatives;
     buildLangOptions(s.lang);
     document.getElementById('autoInsertIfSingle').checked = s.autoInsertIfSingle;
+    document.getElementById('sidePanelMode').checked = s.sidePanelMode;
     document.getElementById('continuous').checked = s.continuous;
     document.getElementById('interimResults').checked = s.interimResults;
     renderReplacements(s.replacements);
@@ -457,6 +458,7 @@
 
     document.getElementById('lang').addEventListener('change', (e) => save({ lang: e.target.value }));
     document.getElementById('autoInsertIfSingle').addEventListener('change', (e) => save({ autoInsertIfSingle: e.target.checked }));
+    document.getElementById('sidePanelMode').addEventListener('change', (e) => save({ sidePanelMode: e.target.checked }));
     document.getElementById('continuous').addEventListener('change', (e) => save({ continuous: e.target.checked }));
     document.getElementById('interimResults').addEventListener('change', (e) => save({ interimResults: e.target.checked }));
     document.getElementById('add-replacement').addEventListener('click', () => appendReplacementRow({}, true));

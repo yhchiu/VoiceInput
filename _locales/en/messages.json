@@ -27,6 +27,8 @@
   "optLang": { "message": "Recognition language" },
   "optLangAuto": { "message": "Auto" },
   "optAutoInsertIfSingle": { "message": "Auto-insert when only one alternative is returned" },
+  "optSidePanelMode": { "message": "Side Panel Mode" },
+  "optSidePanelModeHint": { "message": "Run voice recognition in the browser side panel. This mode only needs microphone permission for the extension once and can be used across websites." },
   "optContinuous": { "message": "Continuous mode" },
   "optContinuousHint": { "message": "Keep listening until you stop manually. Not recommended for input-helper UX." },
   "optInterimResults": { "message": "Show interim results" },
@@ -91,6 +93,9 @@
   "popupCopied": { "message": "Copied" },
   "popupCopyFailed": { "message": "Could not copy" },
   "popupHint": { "message": "Tip: focus a field first, then press the shortcut." },
+  "sidePanelHint": { "message": "Tip: focus a field on the page, then return to this side panel to start recognition." },
+  "sidePanelModeDisabled": { "message": "Side Panel Mode is not enabled. Enable it in settings first." },
+  "sidePanelPageUnavailable": { "message": "Voice input is not available on the current page." },
 
   "permTitle": { "message": "Enable Microphone" },
   "permDesc": { "message": "Click the button below to grant microphone access. You only need to do this once." },

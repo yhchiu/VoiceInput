@@ -1,11 +1,7 @@
-// Web Speech API driver running in the content script.
-// Exposes globalThis.viCreateRecognizer({ lang, maxAlternatives, continuous, interimResults, on… }).
-//
-// SR runs here (rather than in an offscreen document) because Chrome's
-// offscreen documents reliably reject SpeechRecognition with `not-allowed`.
-// Trade-off: microphone permission is granted per host, not per extension.
+// Web Speech API driver shared by content scripts and extension pages.
+// Exposes globalThis.viCreateRecognizer({ lang, maxAlternatives, continuous, interimResults, on... }).
 (function () {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const SR = globalThis.SpeechRecognition || globalThis.webkitSpeechRecognition;
 
   function viCreateRecognizer(opts) {
     if (!SR) {
@@ -15,7 +11,7 @@
         message: 'SpeechRecognition not supported in this browser.',
       };
     }
-    if (!window.isSecureContext) {
+    if (globalThis.isSecureContext === false) {
       return {
         ok: false,
         reason: 'insecure-context',

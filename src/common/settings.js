@@ -9,6 +9,7 @@
     continuous: false,
     interimResults: false,
     autoInsertIfSingle: true,
+    sidePanelMode: false,
     replacements: [],
   });
 
@@ -48,6 +49,7 @@
     if ('continuous' in out) out.continuous = !!out.continuous;
     if ('interimResults' in out) out.interimResults = !!out.interimResults;
     if ('autoInsertIfSingle' in out) out.autoInsertIfSingle = !!out.autoInsertIfSingle;
+    if ('sidePanelMode' in out) out.sidePanelMode = !!out.sidePanelMode;
     if ('lang' in out && typeof out.lang !== 'string') delete out.lang;
     if ('replacements' in out) out.replacements = normalizeReplacements(out.replacements);
     return out;
@@ -92,6 +94,7 @@
     return { ...DEFAULTS };
   }
 
+  globalThis.VI_SETTINGS_KEY = KEY;
   globalThis.VI_DEFAULT_SETTINGS = DEFAULTS;
   globalThis.viNormalizeReplacements = normalizeReplacements;
   globalThis.viApplyReplacements = viApplyReplacements;

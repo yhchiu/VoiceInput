@@ -87,20 +87,22 @@
   }
 
   async function refreshRecentResult() {
-    const text = document.getElementById('recent-result-text');
-    const copy = document.getElementById('copy-recent');
     try {
       const res = await chrome.runtime.sendMessage({
         target: TARGETS.BACKGROUND,
         action: MSG.GET_RECENT_RESULT,
       });
-      recentResultText = res && res.result && typeof res.result.text === 'string'
-        ? res.result.text
-        : '';
+      applyRecentResult(res && res.result);
     } catch (_) {
-      recentResultText = '';
+      applyRecentResult(null);
     }
+  }
 
+  function applyRecentResult(result) {
+    const text = document.getElementById('recent-result-text');
+    const copy = document.getElementById('copy-recent');
+    if (!text || !copy) return;
+    recentResultText = result && typeof result.text === 'string' ? result.text : '';
     const hasResult = recentResultText.trim().length > 0;
     text.textContent = hasResult ? recentResultText : t('popupNoRecentResult');
     text.title = hasResult ? recentResultText : '';
@@ -155,5 +157,20 @@
     document.getElementById('open-options').addEventListener('click', () => {
       chrome.runtime.openOptionsPage();
     });
+  });
+
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (!msg || msg.target !== TARGETS.POPUP) return false;
+
+    switch (msg.action) {
+      case MSG.RECENT_RESULT_UPDATED:
+        applyRecentResult(msg.result);
+        sendResponse({ ok: true });
+        return false;
+
+      default:
+        sendResponse({ ok: false, error: 'unknown-action' });
+        return false;
+    }
   });
 })();

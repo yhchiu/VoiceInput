@@ -1,7 +1,6 @@
 // Content script — focus tracking, recognition driver wiring, picker, insertion.
-// SpeechRecognition runs here (in the host page's document) because Chrome
-// offscreen documents do not reliably allow SR. Mic permission is granted
-// per host the first time the user triggers recognition on that origin.
+// In normal mode SpeechRecognition runs here; in Side Panel mode this script
+// receives recognition events from the extension page and handles page UI/input.
 (function () {
   const MSG = globalThis.VI_MSG;
   const TARGETS = globalThis.VI_TARGETS;
@@ -15,6 +14,7 @@
   let activeSessionId = null;
   let activeRecognizer = null;
   let activePicker = null;
+  let activePickerId = 0;
   let activeListening = null;
   let activeInterimPreview = null;
 
@@ -71,6 +71,31 @@
   }
   function disposeInterimPreview() {
     if (activeInterimPreview) { try { activeInterimPreview.dispose(); } catch (_) {} activeInterimPreview = null; }
+  }
+
+  function notifyPickerClosed(pickerId) {
+    chrome.runtime
+      .sendMessage({
+        target: TARGETS.BACKGROUND,
+        source: TARGETS.CONTENT,
+        action: MSG.PICKER_CLOSED,
+        pickerId,
+      })
+      .catch(() => {});
+  }
+
+  function showListeningIndicator() {
+    disposeListening();
+    activeListening = globalThis.viMakeListening(t('popupListening'));
+  }
+
+  function updateInterimPreview(text) {
+    if (!activeInterimPreview && lastTarget && document.contains(lastTarget)) {
+      activeInterimPreview = globalThis.viMakeInterimPreview(lastTarget, t('interimPreviewTitle'));
+    }
+    if (activeInterimPreview) {
+      activeInterimPreview.update(text);
+    }
   }
 
   function rememberRecentResult(text) {
@@ -162,17 +187,32 @@
 
   function showPicker(alternatives) {
     disposePicker();
+    const pickerId = activePickerId + 1;
+    let pickerClosed = false;
+    activePickerId = pickerId;
+    const closePicker = () => {
+      if (pickerClosed) return;
+      pickerClosed = true;
+      if (activePickerId === pickerId) activePicker = null;
+      notifyPickerClosed(pickerId);
+    };
     activePicker = globalThis.viMakePicker({
       anchor: lastTarget,
       alternatives,
       t,
       onPick: (idx) => {
-        activePicker = null;
+        closePicker();
         performInsertion(alternatives[idx].transcript);
       },
       onCopy: (idx) => copyRecognitionText(alternatives[idx].transcript),
-      onCancel: () => { activePicker = null; },
+      onCancel: closePicker,
     });
+  }
+
+  function handlePickerKey(key, pickerId) {
+    if (!activePicker || typeof activePicker.handleKey !== 'function') return false;
+    if (typeof pickerId === 'number' && pickerId !== activePickerId) return false;
+    return !!activePicker.handleKey(key);
   }
 
   // === Errors ===
@@ -249,8 +289,7 @@
       continuous: settings.continuous,
       interimResults: settings.interimResults,
       onStart: () => {
-        disposeListening();
-        activeListening = globalThis.viMakeListening(t('popupListening'));
+        showListeningIndicator();
       },
       onResult: (alternatives) => {
         if (!settings.continuous) disposeListening();
@@ -258,12 +297,7 @@
         handleResults(alternatives);
       },
       onInterim: (text) => {
-        if (!activeInterimPreview && lastTarget && document.contains(lastTarget)) {
-          activeInterimPreview = globalThis.viMakeInterimPreview(lastTarget, t('interimPreviewTitle'));
-        }
-        if (activeInterimPreview) {
-          activeInterimPreview.update(text);
-        }
+        updateInterimPreview(text);
       },
       onError: (error, message) => {
         disposeListening();
@@ -295,6 +329,48 @@
 
       case MSG.STOP_RECOGNITION:
         endSession();
+        sendResponse({ ok: true });
+        return false;
+
+      case MSG.PREPARE_RECOGNITION_TARGET: {
+        const ok = captureForRecognition();
+        if (!ok) globalThis.viMakeToast(t('pickerNoTarget'));
+        sendResponse({ ok, error: ok ? undefined : 'no-target' });
+        return false;
+      }
+
+      case MSG.RECOGNITION_STARTED:
+        showListeningIndicator();
+        sendResponse({ ok: true });
+        return false;
+
+      case MSG.RECOGNITION_RESULTS:
+        (async () => {
+          const settings = await globalThis.viGetSettings();
+          if (!settings.continuous) disposeListening();
+          if (activeInterimPreview) activeInterimPreview.update('');
+          await handleResults(msg.alternatives || []);
+          sendResponse({
+            ok: true,
+            picker: !!activePicker,
+            pickerId: activePicker ? activePickerId : null,
+          });
+        })();
+        return true;
+
+      case MSG.RECOGNITION_INTERIM:
+        updateInterimPreview(msg.text || '');
+        sendResponse({ ok: true });
+        return false;
+
+      case MSG.PICKER_KEY:
+        sendResponse({ ok: handlePickerKey(msg.key, msg.pickerId) });
+        return false;
+
+      case MSG.RECOGNITION_ERROR:
+      case MSG.RECOGNITION_ENDED:
+        disposeListening();
+        disposeInterimPreview();
         sendResponse({ ok: true });
         return false;
 

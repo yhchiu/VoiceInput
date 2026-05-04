@@ -27,6 +27,8 @@
   "optLang": { "message": "识别语言" },
   "optLangAuto": { "message": "自动" },
   "optAutoInsertIfSingle": { "message": "引擎只回 1 个候选时自动写入" },
+  "optSidePanelMode": { "message": "侧边面板模式" },
+  "optSidePanelModeHint": { "message": "使用侧边面板执行语音识别。此模式的优点是麦克风权限只需授权扩展程序一次，可跨网站使用。" },
   "optContinuous": { "message": "连续模式" },
   "optContinuousHint": { "message": "持续监听直到你手动停止。输入助手场景不建议启用。" },
   "optInterimResults": { "message": "显示中间结果" },
@@ -91,6 +93,9 @@
   "popupCopied": { "message": "已复制" },
   "popupCopyFailed": { "message": "无法复制" },
   "popupHint": { "message": "提示：请先将焦点停在输入栏，再按快捷键。" },
+  "sidePanelHint": { "message": "提示：请先将焦点停在网页输入栏，再回到此侧边面板开始识别。" },
+  "sidePanelModeDisabled": { "message": "侧边面板模式尚未开启，请先到设置启用。" },
+  "sidePanelPageUnavailable": { "message": "无法在目前页面使用语音输入。" },
 
   "permTitle": { "message": "启用麦克风" },
   "permDesc": { "message": "请点下方按钮授权麦克风访问。只需授权一次即可。" },

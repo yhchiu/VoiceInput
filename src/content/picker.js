@@ -329,44 +329,43 @@
       try { onCancel && onCancel(); } catch (_) {}
     }
 
-    function onKey(e) {
-      if (done) return;
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        e.stopPropagation();
+    function handleKey(key) {
+      if (done) return false;
+      if (key === 'Escape') {
         cancel();
-        return;
+        return true;
       }
-      if (items.length === 0) return;
+      if (items.length === 0) return false;
       const focused = shadow.activeElement;
-      if (focused && focused.classList && focused.classList.contains('vi-picker-copy') && (e.key === 'Enter' || e.key === ' ')) {
-        return;
+      if (focused && focused.classList && focused.classList.contains('vi-picker-copy') && (key === 'Enter' || key === ' ')) {
+        return false;
       }
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        e.stopPropagation();
+      if (key === 'Enter') {
         pick(activeIdx);
-        return;
+        return true;
       }
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        e.stopPropagation();
+      if (key === 'ArrowDown') {
         setActive((activeIdx + 1) % items.length);
-        return;
+        return true;
       }
-      if (e.key === 'ArrowUp') {
+      if (key === 'ArrowUp') {
+        setActive((activeIdx - 1 + items.length) % items.length);
+        return true;
+      }
+      if (/^[1-9]$/.test(key)) {
+        const idx = parseInt(key, 10) - 1;
+        if (idx < items.length) {
+          pick(idx);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function onKey(e) {
+      if (handleKey(e.key)) {
         e.preventDefault();
         e.stopPropagation();
-        setActive((activeIdx - 1 + items.length) % items.length);
-        return;
-      }
-      if (/^[1-9]$/.test(e.key)) {
-        const idx = parseInt(e.key, 10) - 1;
-        if (idx < items.length) {
-          e.preventDefault();
-          e.stopPropagation();
-          pick(idx);
-        }
       }
     }
 
@@ -422,7 +421,7 @@
     document.body.appendChild(host);
     requestAnimationFrame(position);
 
-    return { dispose: cancel };
+    return { dispose: cancel, handleKey };
   }
 
   function makeToast(message, ttl = 2200) {
