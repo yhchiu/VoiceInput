@@ -73,8 +73,58 @@
     if (activeInterimPreview) { try { activeInterimPreview.dispose(); } catch (_) {} activeInterimPreview = null; }
   }
 
+  function rememberRecentResult(text) {
+    if (typeof text !== 'string' || !text.trim()) return;
+    chrome.runtime
+      .sendMessage({
+        target: TARGETS.BACKGROUND,
+        action: MSG.SET_RECENT_RESULT,
+        text,
+      })
+      .catch(() => {});
+  }
+
+  function copyTextFallback(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.cssText = 'position: fixed; left: -9999px; top: 0; opacity: 0;';
+    document.documentElement.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    let ok = false;
+    try {
+      ok = document.execCommand && document.execCommand('copy');
+    } finally {
+      try { textarea.remove(); } catch (_) {}
+    }
+    if (!ok) throw new Error('copy-failed');
+  }
+
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      try {
+        await navigator.clipboard.writeText(text);
+        return;
+      } catch (_) {}
+    }
+    copyTextFallback(text);
+  }
+
+  async function copyRecognitionText(text) {
+    if (typeof text !== 'string' || !text.trim()) return;
+    try {
+      await copyTextToClipboard(text);
+      rememberRecentResult(text);
+      globalThis.viMakeToast(t('toastCopied'));
+    } catch (_) {
+      globalThis.viMakeToast(t('toastCopyFailed'), 2600);
+    }
+  }
+
   // === Insertion ===
   function performInsertion(text) {
+    rememberRecentResult(text);
     if (!lastTarget || !document.contains(lastTarget)) {
       globalThis.viMakeToast(t('pickerTargetGone'));
       return;
@@ -120,6 +170,7 @@
         activePicker = null;
         performInsertion(alternatives[idx].transcript);
       },
+      onCopy: (idx) => copyRecognitionText(alternatives[idx].transcript),
       onCancel: () => { activePicker = null; },
     });
   }

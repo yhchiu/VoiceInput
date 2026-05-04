@@ -12,6 +12,19 @@
         <label for="lang" data-i18n="optLang"></label>
         <select id="lang"></select>
       </div>
+      <div class="field recent-result" aria-live="polite">
+        <label data-i18n="popupRecentResult"></label>
+        <div class="recent-result-row">
+          <p id="recent-result-text" class="recent-result-text" data-i18n="popupNoRecentResult"></p>
+          <button id="copy-recent" class="icon-button" type="button" disabled>
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+        </div>
+        <p id="copy-status" class="copy-status" hidden></p>
+      </div>
       <button id="start" class="primary" data-i18n="popupStart"></button>
       <p class="hint" data-i18n="popupHint"></p>
       <div class="links">

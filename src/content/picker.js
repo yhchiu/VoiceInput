@@ -36,10 +36,17 @@
       margin: 0;
       padding: 0;
     }
+    .vi-picker-row {
+      display: flex;
+      align-items: stretch;
+      gap: 4px;
+      padding: 0 8px 0 0;
+    }
     .vi-picker-item {
       display: flex;
       align-items: center;
-      width: 100%;
+      flex: 1 1 auto;
+      min-width: 0;
       padding: 8px 12px;
       background: transparent;
       border: 0;
@@ -50,7 +57,37 @@
       font: inherit;
       gap: 10px;
     }
-    .vi-picker-item:hover, .vi-picker-item.vi-active { background: #f5f0ff; }
+    .vi-picker-row:hover .vi-picker-item,
+    .vi-picker-row.vi-active .vi-picker-item { background: #f5f0ff; }
+    .vi-picker-copy {
+      flex: 0 0 30px;
+      width: 30px;
+      height: 30px;
+      align-self: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: #64748b;
+      cursor: pointer;
+      outline: 0;
+      padding: 0;
+    }
+    .vi-picker-copy:hover {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+    .vi-picker-copy:focus-visible {
+      box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.28);
+      color: #5b21b6;
+    }
+    .vi-picker-copy svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+    }
     .vi-picker-rank {
       flex: 0 0 18px;
       height: 18px;
@@ -64,7 +101,7 @@
       align-items: center;
       justify-content: center;
     }
-    .vi-picker-item.vi-active .vi-picker-rank { background: #7c3aed; color: #fff; }
+    .vi-picker-row.vi-active .vi-picker-rank { background: #7c3aed; color: #fff; }
     .vi-picker-text {
       flex: 1 1 auto;
       word-break: break-word;
@@ -166,7 +203,7 @@
     return { host, shadow };
   }
 
-  function makePicker({ anchor, alternatives, t, onPick, onCancel }) {
+  function makePicker({ anchor, alternatives, t, onPick, onCopy, onCancel }) {
     const { host, shadow } = makeShadowHost();
 
     const panel = document.createElement('div');
@@ -203,6 +240,7 @@
 
       alternatives.forEach((alt, idx) => {
         const li = document.createElement('li');
+        li.className = 'vi-picker-row';
         const btn = document.createElement('button');
         btn.className = 'vi-picker-item';
         btn.setAttribute('role', 'option');
@@ -236,18 +274,39 @@
         });
         btn.addEventListener('mouseenter', () => setActive(idx));
 
+        const copy = document.createElement('button');
+        copy.type = 'button';
+        copy.className = 'vi-picker-copy';
+        copy.setAttribute('aria-label', t('pickerCopy'));
+        copy.title = t('pickerCopy');
+        copy.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        copy.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        });
+        copy.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          copyResult(idx);
+        });
+        copy.addEventListener('mouseenter', () => setActive(idx));
+
         li.appendChild(btn);
+        li.appendChild(copy);
         list.appendChild(li);
-        items.push(btn);
+        items.push({ row: li, button: btn });
       });
     }
 
     function setActive(i) {
       activeIdx = i;
-      items.forEach((b, j) => b.classList.toggle('vi-active', j === i));
-      const a = items[i];
-      if (a && typeof a.scrollIntoView === 'function') {
-        try { a.scrollIntoView({ block: 'nearest' }); } catch (_) {}
+      items.forEach((item, j) => {
+        item.row.classList.toggle('vi-active', j === i);
+        item.button.classList.toggle('vi-active', j === i);
+      });
+      const active = items[i] && items[i].row;
+      if (active && typeof active.scrollIntoView === 'function') {
+        try { active.scrollIntoView({ block: 'nearest' }); } catch (_) {}
       }
     }
 
@@ -256,6 +315,11 @@
       done = true;
       cleanup();
       try { onPick(i); } catch (_) {}
+    }
+
+    function copyResult(i) {
+      if (done) return;
+      try { onCopy && onCopy(i); } catch (_) {}
     }
 
     function cancel() {
@@ -274,6 +338,10 @@
         return;
       }
       if (items.length === 0) return;
+      const focused = shadow.activeElement;
+      if (focused && focused.classList && focused.classList.contains('vi-picker-copy') && (e.key === 'Enter' || e.key === ' ')) {
+        return;
+      }
       if (e.key === 'Enter') {
         e.preventDefault();
         e.stopPropagation();

@@ -7,6 +7,7 @@
   "pickerEmpty": { "message": "No alternatives" },
   "pickerHintEsc": { "message": "Esc cancel" },
   "pickerHintEnter": { "message": "Enter insert" },
+  "pickerCopy": { "message": "Copy" },
   "pickerNoTarget": { "message": "Focus an input field first." },
   "pickerTargetGone": { "message": "Target field is no longer available." },
   "interimPreviewTitle": { "message": "Recognition preview" },
@@ -70,7 +71,7 @@
   "optAboutIssues": { "message": "Report bugs or request features" },
   "optAboutIssuesLink": { "message": "Open GitHub Issues" },
   "optAboutPrivacy": { "message": "Privacy statement" },
-  "optAboutPrivacyText": { "message": "VoiceInput does not collect or send your voice, recognized text, or page content through its own servers. Settings are stored only in Chrome storage. Speech recognition is handled by the browser Web Speech API and may be subject to your browser or operating system service terms and privacy policy." },
+  "optAboutPrivacyText": { "message": "VoiceInput does not collect or send your voice, recognized text, or page content through its own servers. Settings are stored only in Chrome storage. To show the recent recognition result in the popup, the last recognized text is temporarily kept in Chrome session storage and cleared when the browser session ends. Speech recognition is handled by the browser Web Speech API and may be subject to your browser or operating system service terms and privacy policy." },
   "optAboutLicense": { "message": "License" },
   "optAdvanced": { "message": "Advanced" },
   "optShortcutsTitle": { "message": "Keyboard shortcut" },
@@ -84,6 +85,11 @@
   "popupIdle": { "message": "Idle" },
   "popupEnableMic": { "message": "Enable microphone" },
   "popupOpenOptions": { "message": "Settings" },
+  "popupRecentResult": { "message": "Recent recognition result" },
+  "popupNoRecentResult": { "message": "No recognition result yet" },
+  "popupCopyRecent": { "message": "Copy recent recognition result" },
+  "popupCopied": { "message": "Copied" },
+  "popupCopyFailed": { "message": "Could not copy" },
   "popupHint": { "message": "Tip: focus a field first, then press the shortcut." },
 
   "permTitle": { "message": "Enable Microphone" },
@@ -95,5 +101,7 @@
   "toastInserted": {
     "message": "Inserted: $TEXT$",
     "placeholders": { "text": { "content": "$1", "example": "hello world" } }
-  }
+  },
+  "toastCopied": { "message": "Copied to clipboard." },
+  "toastCopyFailed": { "message": "Could not copy to clipboard." }
 }

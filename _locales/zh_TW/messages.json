@@ -7,6 +7,7 @@
   "pickerEmpty": { "message": "沒有候選結果" },
   "pickerHintEsc": { "message": "Esc 取消" },
   "pickerHintEnter": { "message": "Enter 寫入" },
+  "pickerCopy": { "message": "複製" },
   "pickerNoTarget": { "message": "請先點選輸入欄位" },
   "pickerTargetGone": { "message": "目標欄位已不存在" },
   "interimPreviewTitle": { "message": "辨識預覽" },
@@ -70,7 +71,7 @@
   "optAboutIssues": { "message": "回報錯誤或請求功能" },
   "optAboutIssuesLink": { "message": "開啟 GitHub Issues" },
   "optAboutPrivacy": { "message": "隱私聲明" },
-  "optAboutPrivacyText": { "message": "VoiceInput 不經由自有伺服器收集或傳送你的語音、辨識文字或網頁內容。設定資料只儲存在 Chrome storage。語音辨識由瀏覽器的 Web Speech API 處理，可能受瀏覽器或作業系統服務條款與隱私政策約束。" },
+  "optAboutPrivacyText": { "message": "VoiceInput 不經由自有伺服器收集或傳送你的語音、辨識文字或網頁內容。設定資料只儲存在 Chrome storage。為了在 popup 顯示最近辨識結果，最後一筆辨識文字會暫存在 Chrome session storage，瀏覽器工作階段結束後清除。語音辨識由瀏覽器的 Web Speech API 處理，可能受瀏覽器或作業系統服務條款與隱私政策約束。" },
   "optAboutLicense": { "message": "License" },
   "optAdvanced": { "message": "進階" },
   "optShortcutsTitle": { "message": "鍵盤快捷鍵" },
@@ -84,6 +85,11 @@
   "popupIdle": { "message": "閒置" },
   "popupEnableMic": { "message": "啟用麥克風" },
   "popupOpenOptions": { "message": "設定" },
+  "popupRecentResult": { "message": "最近辨識結果" },
+  "popupNoRecentResult": { "message": "尚無辨識結果" },
+  "popupCopyRecent": { "message": "複製最近辨識結果" },
+  "popupCopied": { "message": "已複製" },
+  "popupCopyFailed": { "message": "無法複製" },
   "popupHint": { "message": "提示：請先將焦點停在輸入欄，再按快捷鍵。" },
 
   "permTitle": { "message": "啟用麥克風" },
@@ -95,5 +101,7 @@
   "toastInserted": {
     "message": "已寫入：$TEXT$",
     "placeholders": { "text": { "content": "$1", "example": "你好" } }
-  }
+  },
+  "toastCopied": { "message": "已複製到剪貼簿。" },
+  "toastCopyFailed": { "message": "無法複製到剪貼簿。" }
 }

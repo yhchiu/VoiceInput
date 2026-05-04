@@ -7,10 +7,45 @@ importScripts('/src/common/messages.js');
 
 const MSG = globalThis.VI_MSG;
 const TARGETS = globalThis.VI_TARGETS;
+const RECENT_RESULT_KEY = 'voiceInput.recentResult.v1';
 
 // Tracks the tab currently believed to be running a session. The content
 // script tells us via RECOGNITION_ENDED when it actually stops.
 let currentSession = null; // { tabId, frameId } | null
+let recentResultMemory = null;
+
+function normalizeRecentResultText(text) {
+  if (typeof text !== 'string') return '';
+  const value = text.trim();
+  return value.length > 4000 ? value.slice(0, 4000) : value;
+}
+
+async function setRecentResult(text) {
+  const value = normalizeRecentResultText(text);
+  if (!value) return null;
+  const result = {
+    text: value,
+    updatedAt: Date.now(),
+  };
+  if (chrome.storage.session) {
+    await chrome.storage.session.set({ [RECENT_RESULT_KEY]: result });
+  } else {
+    recentResultMemory = result;
+  }
+  return result;
+}
+
+async function getRecentResult() {
+  const stored = chrome.storage.session
+    ? await chrome.storage.session.get(RECENT_RESULT_KEY)
+    : { [RECENT_RESULT_KEY]: recentResultMemory };
+  const result = stored && stored[RECENT_RESULT_KEY];
+  if (!result || typeof result.text !== 'string' || !result.text.trim()) return null;
+  return {
+    text: result.text,
+    updatedAt: typeof result.updatedAt === 'number' ? result.updatedAt : null,
+  };
+}
 
 async function getActiveTabFrame() {
   try {
@@ -91,6 +126,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
       case MSG.GET_STATUS: {
         sendResponse({ ok: true, listening: !!currentSession });
+        return;
+      }
+
+      case MSG.SET_RECENT_RESULT: {
+        const result = await setRecentResult(msg.text);
+        sendResponse({ ok: true, result });
+        return;
+      }
+
+      case MSG.GET_RECENT_RESULT: {
+        const result = await getRecentResult();
+        sendResponse({ ok: true, result });
         return;
       }
 

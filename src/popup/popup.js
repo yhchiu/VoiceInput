@@ -4,6 +4,8 @@
   const t = globalThis.vt;
   let listening = false;
   let restarting = false;
+  let recentResultText = '';
+  let copyStatusTimer = null;
 
   function applyI18n() {
     document.querySelectorAll('[data-i18n]').forEach((el) => {
@@ -44,9 +46,84 @@
     globalThis.viBuildLangOptions(document.getElementById('lang'), settings.lang, t('optLangAuto'));
   }
 
+  function copyTextFallback(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.cssText = 'position: fixed; left: -9999px; top: 0; opacity: 0;';
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    let ok = false;
+    try {
+      ok = document.execCommand && document.execCommand('copy');
+    } finally {
+      textarea.remove();
+    }
+    if (!ok) throw new Error('copy-failed');
+  }
+
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      try {
+        await navigator.clipboard.writeText(text);
+        return;
+      } catch (_) {}
+    }
+    copyTextFallback(text);
+  }
+
+  function setCopyStatus(message, isError = false) {
+    const status = document.getElementById('copy-status');
+    status.textContent = message;
+    status.hidden = false;
+    status.classList.toggle('is-error', isError);
+    if (copyStatusTimer) clearTimeout(copyStatusTimer);
+    copyStatusTimer = setTimeout(() => {
+      status.hidden = true;
+      status.textContent = '';
+      status.classList.remove('is-error');
+    }, 1500);
+  }
+
+  async function refreshRecentResult() {
+    const text = document.getElementById('recent-result-text');
+    const copy = document.getElementById('copy-recent');
+    try {
+      const res = await chrome.runtime.sendMessage({
+        target: TARGETS.BACKGROUND,
+        action: MSG.GET_RECENT_RESULT,
+      });
+      recentResultText = res && res.result && typeof res.result.text === 'string'
+        ? res.result.text
+        : '';
+    } catch (_) {
+      recentResultText = '';
+    }
+
+    const hasResult = recentResultText.trim().length > 0;
+    text.textContent = hasResult ? recentResultText : t('popupNoRecentResult');
+    text.title = hasResult ? recentResultText : '';
+    text.classList.toggle('is-empty', !hasResult);
+    copy.disabled = !hasResult;
+    copy.title = t('popupCopyRecent');
+    copy.setAttribute('aria-label', t('popupCopyRecent'));
+  }
+
+  async function copyRecentResult() {
+    if (!recentResultText.trim()) return;
+    try {
+      await copyTextToClipboard(recentResultText);
+      setCopyStatus(t('popupCopied'));
+    } catch (_) {
+      setCopyStatus(t('popupCopyFailed'), true);
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     applyI18n();
     await loadSettings();
+    await refreshRecentResult();
     await refreshStatus();
 
     document.getElementById('start').addEventListener('click', async () => {
@@ -72,6 +149,8 @@
         restarting = false;
       }
     });
+
+    document.getElementById('copy-recent').addEventListener('click', copyRecentResult);
 
     document.getElementById('open-options').addEventListener('click', () => {
       chrome.runtime.openOptionsPage();
