@@ -1,5 +1,21 @@
 [
   {
+    "version": "1.0.2",
+    "date": "2026-05-05",
+    "items": [
+      {
+        "commit": "0207da3e13893c0fb458d299b69b9a67626e6008",
+        "type": "feat",
+        "subject": "feat: add side panel mode"
+      },
+      {
+        "commit": "8d3bf2771b75b9ddfe702c5a8b58cb1170bb2276",
+        "type": "feat",
+        "subject": "feat: add copy actions for recognition results"
+      }
+    ]
+  },
+  {
     "version": "1.0.1",
     "date": "2026-05-03",
     "items": [
