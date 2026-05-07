@@ -110,6 +110,9 @@
   async function loadSettings() {
     const settings = await globalThis.viGetSettings();
     globalThis.viBuildLangOptions(document.getElementById('lang'), settings.lang, t('optLangAuto'));
+    const continuous = document.getElementById('continuous');
+    continuous.checked = !!settings.continuous;
+    continuous.closest('.toggle-row').title = t('optContinuousHint');
   }
 
   function copyTextFallback(text) {
@@ -381,6 +384,16 @@
     }
   }
 
+  function restartRecognition() {
+    if (restarting) return;
+    restarting = true;
+    stopRecognition();
+    setTimeout(() => {
+      restarting = false;
+      startRecognition();
+    }, 250);
+  }
+
   async function refreshStatus() {
     try {
       const res = await sendBackground(MSG.GET_STATUS);
@@ -409,12 +422,14 @@
       await globalThis.viSetSettings({ lang: e.target.value });
       if ((!listening && !activeRecognizer) || restarting) return;
 
-      restarting = true;
-      stopRecognition();
-      setTimeout(() => {
-        restarting = false;
-        startRecognition();
-      }, 250);
+      restartRecognition();
+    });
+
+    document.getElementById('continuous').addEventListener('change', async (e) => {
+      await globalThis.viSetSettings({ continuous: e.target.checked });
+      if ((!listening && !activeRecognizer) || restarting) return;
+
+      restartRecognition();
     });
 
     document.getElementById('copy-recent').addEventListener('click', copyRecentResult);

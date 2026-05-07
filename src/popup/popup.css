@@ -132,6 +132,32 @@ button.warn:hover { background: #b91c1c; }
   color: #b91c1c;
 }
 .copy-status[hidden] { display: none; }
+.toggle-row {
+  box-sizing: border-box;
+  margin-bottom: 10px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+}
+.toggle-row span {
+  min-width: 0;
+  line-height: 1.4;
+}
+.toggle-row input {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #7c3aed;
+}
+.toggle-row:focus-within {
+  color: #5b21b6;
+}
 .hint { font-size: 11px; color: #64748b; margin: 8px 0 10px 0; line-height: 1.45; }
 .links {
   display: flex;
