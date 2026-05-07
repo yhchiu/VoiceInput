@@ -9,6 +9,7 @@ const TARGETS = globalThis.VI_TARGETS;
 const RECENT_RESULT_KEY = 'voiceInput.recentResult.v1';
 const POPUP_PATH = 'src/popup/popup.html';
 const SIDE_PANEL_PATH = 'src/sidepanel/sidepanel.html';
+const MIC_PERMISSION_PAGE_PATH = 'src/permission/permission.html';
 
 // { mode: 'content' | 'sidepanel', tabId, frameId, windowId, sessionId? } | null
 let currentSession = null;
@@ -432,6 +433,30 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case MSG.GET_RECENT_RESULT: {
         const result = await getRecentResult();
         sendResponse({ ok: true, result });
+        return;
+      }
+
+      case MSG.OPEN_MIC_PERMISSION_PAGE: {
+        try {
+          await chrome.tabs.create({
+            url: chrome.runtime.getURL(MIC_PERMISSION_PAGE_PATH),
+            active: true,
+          });
+          sendResponse({ ok: true });
+        } catch (_) {
+          sendResponse({ ok: false, error: 'open-failed' });
+        }
+        return;
+      }
+
+      case MSG.MICROPHONE_PERMISSION_GRANTED: {
+        try {
+          await chrome.runtime.sendMessage({
+            target: TARGETS.SIDEPANEL,
+            action: MSG.MICROPHONE_PERMISSION_GRANTED,
+          });
+        } catch (_) {}
+        sendResponse({ ok: true });
         return;
       }
 

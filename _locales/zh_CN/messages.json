@@ -96,6 +96,8 @@
   "sidePanelHint": { "message": "提示：请先将焦点停在网页输入栏，再回到此侧边面板开始识别。" },
   "sidePanelModeDisabled": { "message": "侧边面板模式尚未开启，请先到设置启用。" },
   "sidePanelPageUnavailable": { "message": "无法在目前页面使用语音输入。" },
+  "sidePanelMicPermissionPrompt": { "message": "请允许此扩展使用麦克风。" },
+  "sidePanelMicPermissionOpened": { "message": "已打开麦克风授权标签页。请在该标签页授权后，回到侧边面板再次开始识别。" },
 
   "permTitle": { "message": "启用麦克风" },
   "permDesc": { "message": "请点下方按钮授权麦克风访问。只需授权一次即可。" },

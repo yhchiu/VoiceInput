@@ -96,6 +96,8 @@
   "sidePanelHint": { "message": "Tip: focus a field on the page, then return to this side panel to start recognition." },
   "sidePanelModeDisabled": { "message": "Side Panel Mode is not enabled. Enable it in settings first." },
   "sidePanelPageUnavailable": { "message": "Voice input is not available on the current page." },
+  "sidePanelMicPermissionPrompt": { "message": "Allow microphone access for this extension." },
+  "sidePanelMicPermissionOpened": { "message": "A microphone permission tab was opened. Grant access there, then return here and start recognition again." },
 
   "permTitle": { "message": "Enable Microphone" },
   "permDesc": { "message": "Click the button below to grant microphone access. You only need to do this once." },

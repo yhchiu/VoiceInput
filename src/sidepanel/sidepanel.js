@@ -14,6 +14,7 @@
   let pendingResultDelivery = Promise.resolve();
   let pickerKeyForwarding = false;
   let pickerKeyForwardingId = null;
+  let microphoneAccessGranted = false;
 
   const PICKER_NAV_KEYS = new Set(['Escape', 'Enter', 'ArrowDown', 'ArrowUp']);
 
@@ -198,6 +199,72 @@
     return t(key) + suffix + extraMsg;
   }
 
+  async function queryMicrophoneState() {
+    try {
+      const res = await navigator.permissions.query({ name: 'microphone' });
+      return res && res.state;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function stopMediaStream(stream) {
+    if (!stream || typeof stream.getTracks !== 'function') return;
+    stream.getTracks().forEach((track) => {
+      try { track.stop(); } catch (_) {}
+    });
+  }
+
+  function microphoneAccessError(error) {
+    const name = error && error.name;
+    const message = (error && error.message) || name || '';
+    if (name === 'NotAllowedError' || name === 'SecurityError' || name === 'PermissionDeniedError') {
+      return { ok: false, error: 'not-allowed', message };
+    }
+    return { ok: false, error: 'audio-capture', message };
+  }
+
+  async function openMicrophonePermissionPage() {
+    try {
+      const res = await sendBackground(MSG.OPEN_MIC_PERMISSION_PAGE);
+      return !!(res && res.ok);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  async function ensureMicrophoneAccess() {
+    if (microphoneAccessGranted) return { ok: true };
+    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+      return { ok: false, error: 'audio-capture', message: 'getUserMedia is not available.' };
+    }
+
+    try {
+      setStatus(t('sidePanelMicPermissionPrompt'), '#64748b');
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      stopMediaStream(stream);
+      microphoneAccessGranted = true;
+      return { ok: true };
+    } catch (error) {
+      const mapped = microphoneAccessError(error);
+      const state = await queryMicrophoneState();
+      const dismissed = /dismiss/i.test(mapped.message || '');
+      if (mapped.error === 'not-allowed' && (dismissed || state !== 'denied') && await openMicrophonePermissionPage()) {
+        return { ok: false, error: 'permission-page-opened' };
+      }
+      return mapped;
+    }
+  }
+
+  function showMicrophoneAccessError(result) {
+    if (result && result.error === 'permission-page-opened') {
+      lastErrorText = t('sidePanelMicPermissionOpened');
+    } else {
+      lastErrorText = recognizerErrorMessage(result && result.error, result && result.message);
+    }
+    setStatus(lastErrorText, '#b91c1c');
+  }
+
   async function finishSession(sessionId) {
     await pendingResultDelivery.catch(() => {});
     activeRecognizer = null;
@@ -221,6 +288,17 @@
     starting = true;
     updateButton();
     setStatus(t('popupListening'), '#dc2626');
+
+    const micAccess = await ensureMicrophoneAccess();
+    if (!micAccess.ok) {
+      starting = false;
+      showMicrophoneAccessError(micAccess);
+      updateButton();
+      if (preparedSessionId) {
+        sendBackground(MSG.RECOGNITION_ENDED, { sessionId: preparedSessionId }).catch(() => {});
+      }
+      return;
+    }
 
     let sessionId = preparedSessionId;
     if (!sessionId) {
@@ -384,6 +462,16 @@
 
       case MSG.RECENT_RESULT_UPDATED:
         applyRecentResult(msg.result);
+        sendResponse({ ok: true });
+        return false;
+
+      case MSG.MICROPHONE_PERMISSION_GRANTED:
+        microphoneAccessGranted = true;
+        if (!listening && !starting) {
+          lastErrorText = '';
+          setStatus(t('permGranted'), '#16a34a');
+          updateButton();
+        }
         sendResponse({ ok: true });
         return false;
 
