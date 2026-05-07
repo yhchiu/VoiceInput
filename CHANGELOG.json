@@ -1,5 +1,31 @@
 [
   {
+    "version": "1.0.3",
+    "date": "2026-05-08",
+    "items": [
+      {
+        "commit": "c65093e509b7aa414e65332faf1796817b16c2b9",
+        "type": "feat",
+        "subject": "feat(sidepanel): add scratchpad input area"
+      },
+      {
+        "commit": "301f935a8a6974f337bf81769633e531756148fb",
+        "type": "style",
+        "subject": "style: reorder voice input controls"
+      },
+      {
+        "commit": "daeb1f5643c1fb34c953f1e428f7d0809ff72bc1",
+        "type": "feat",
+        "subject": "feat: add continuous mode toggles"
+      },
+      {
+        "commit": "1b5f6e560a18efd218e82bf7e0e27600862d2bb1",
+        "type": "fix",
+        "subject": "fix: handle side panel microphone permission"
+      }
+    ]
+  },
+  {
     "version": "1.0.2",
     "date": "2026-05-05",
     "items": [
