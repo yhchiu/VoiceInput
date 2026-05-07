@@ -98,6 +98,10 @@
   "sidePanelPageUnavailable": { "message": "無法在目前頁面使用語音輸入。" },
   "sidePanelMicPermissionPrompt": { "message": "請允許此擴充功能使用麥克風。" },
   "sidePanelMicPermissionOpened": { "message": "已開啟麥克風授權分頁。請在該分頁授權後，回到側邊面板再次開始辨識。" },
+  "sidePanelScratchpad": { "message": "暫存輸入區" },
+  "sidePanelScratchpadPlaceholder": { "message": "點此可將這裡作為語音輸入目標。" },
+  "sidePanelCopyScratchpad": { "message": "複製暫存輸入區" },
+  "sidePanelClearScratchpad": { "message": "清除暫存輸入區" },
 
   "permTitle": { "message": "啟用麥克風" },
   "permDesc": { "message": "請點下方按鈕授權麥克風存取。只需授權一次即可。" },

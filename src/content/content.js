@@ -35,11 +35,40 @@
     return null;
   }
 
+  function notifyPageTargetFocused() {
+    chrome.runtime
+      .sendMessage({
+        target: TARGETS.BACKGROUND,
+        source: TARGETS.CONTENT,
+        action: MSG.PAGE_TARGET_FOCUSED,
+        focusedAt: Date.now(),
+      })
+      .catch(() => {});
+  }
+
+  function rememberEditableTarget(el, notify = true) {
+    if (!globalThis.viIsEditable(el)) return false;
+    lastTarget = el;
+    lastSelection = captureSelection(el);
+    if (notify) notifyPageTargetFocused();
+    return true;
+  }
+
+  function rememberEditableTargetSoon(el) {
+    if (!rememberEditableTarget(el)) return;
+    setTimeout(() => { rememberEditableTarget(el, false); }, 0);
+  }
+
   document.addEventListener('focusin', (e) => {
-    if (globalThis.viIsEditable(e.target)) {
-      lastTarget = e.target;
-      lastSelection = captureSelection(e.target);
-    }
+    rememberEditableTarget(e.target);
+  }, true);
+
+  document.addEventListener('pointerdown', (e) => {
+    rememberEditableTargetSoon(e.target);
+  }, true);
+
+  document.addEventListener('pointerup', (e) => {
+    rememberEditableTargetSoon(e.target);
   }, true);
 
   document.addEventListener('selectionchange', () => {

@@ -98,6 +98,10 @@
   "sidePanelPageUnavailable": { "message": "无法在目前页面使用语音输入。" },
   "sidePanelMicPermissionPrompt": { "message": "请允许此扩展使用麦克风。" },
   "sidePanelMicPermissionOpened": { "message": "已打开麦克风授权标签页。请在该标签页授权后，回到侧边面板再次开始识别。" },
+  "sidePanelScratchpad": { "message": "暂存输入区" },
+  "sidePanelScratchpadPlaceholder": { "message": "点此可将这里作为语音输入目标。" },
+  "sidePanelCopyScratchpad": { "message": "复制暂存输入区" },
+  "sidePanelClearScratchpad": { "message": "清除暂存输入区" },
 
   "permTitle": { "message": "启用麦克风" },
   "permDesc": { "message": "请点下方按钮授权麦克风访问。只需授权一次即可。" },

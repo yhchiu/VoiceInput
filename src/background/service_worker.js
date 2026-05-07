@@ -7,6 +7,7 @@ importScripts('/src/common/messages.js', '/src/common/settings.js');
 const MSG = globalThis.VI_MSG;
 const TARGETS = globalThis.VI_TARGETS;
 const RECENT_RESULT_KEY = 'voiceInput.recentResult.v1';
+const PAGE_TARGET_KEY = 'voiceInput.pageTarget.v1';
 const POPUP_PATH = 'src/popup/popup.html';
 const SIDE_PANEL_PATH = 'src/sidepanel/sidepanel.html';
 const MIC_PERMISSION_PAGE_PATH = 'src/permission/permission.html';
@@ -15,6 +16,7 @@ const MIC_PERMISSION_PAGE_PATH = 'src/permission/permission.html';
 let currentSession = null;
 let pendingSidePanelStart = null;
 let recentResultMemory = null;
+let pageTargetMemory = null;
 let sidePanelPickerTarget = null;
 let sidePanelPickerId = null;
 
@@ -49,6 +51,49 @@ async function getRecentResult() {
     text: result.text,
     updatedAt: typeof result.updatedAt === 'number' ? result.updatedAt : null,
   };
+}
+
+function normalizePageTargetState(state) {
+  if (!state || typeof state.tabId !== 'number' || typeof state.focusedAt !== 'number') return null;
+  return {
+    tabId: state.tabId,
+    frameId: typeof state.frameId === 'number' ? state.frameId : 0,
+    windowId: typeof state.windowId === 'number' ? state.windowId : null,
+    focusedAt: state.focusedAt,
+  };
+}
+
+async function setPageTargetState(state) {
+  const normalized = normalizePageTargetState(state);
+  pageTargetMemory = normalized;
+  if (chrome.storage.session) {
+    if (normalized) {
+      await chrome.storage.session.set({ [PAGE_TARGET_KEY]: normalized });
+    } else {
+      await chrome.storage.session.remove(PAGE_TARGET_KEY);
+    }
+  }
+  return normalized;
+}
+
+async function getStoredPageTargetState() {
+  if (pageTargetMemory) return pageTargetMemory;
+  if (!chrome.storage.session) return null;
+  const stored = await chrome.storage.session.get(PAGE_TARGET_KEY);
+  pageTargetMemory = normalizePageTargetState(stored && stored[PAGE_TARGET_KEY]);
+  return pageTargetMemory;
+}
+
+async function getCurrentPageTargetState() {
+  const state = await getStoredPageTargetState();
+  if (!state) return null;
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (!tab || tab.id !== state.tabId) return null;
+  } catch (_) {
+    return null;
+  }
+  return state;
 }
 
 async function notifyRecentResultUpdated(result) {
@@ -396,6 +441,35 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return;
       }
 
+      case MSG.PAGE_TARGET_FOCUSED: {
+        const tabId = sender && sender.tab && sender.tab.id;
+        const windowId = sender && sender.tab && sender.tab.windowId;
+        const frameId = typeof sender.frameId === 'number' ? sender.frameId : 0;
+        const focusedAt = typeof msg.focusedAt === 'number' ? msg.focusedAt : Date.now();
+        const pageTarget = typeof tabId === 'number'
+          ? await setPageTargetState({ tabId, frameId, windowId, focusedAt })
+          : null;
+        try {
+          await chrome.runtime.sendMessage({
+            target: TARGETS.SIDEPANEL,
+            action: MSG.PAGE_TARGET_FOCUSED,
+            pageTarget,
+            focusedAt,
+            tabId,
+            frameId,
+            windowId,
+          });
+        } catch (_) {}
+        sendResponse({ ok: true });
+        return;
+      }
+
+      case MSG.GET_PAGE_TARGET_STATE: {
+        const pageTarget = await getCurrentPageTargetState();
+        sendResponse({ ok: true, pageTarget });
+        return;
+      }
+
       case MSG.RECOGNITION_ERROR: {
         if (isCurrentSidePanelSession(msg.sessionId)) {
           await sendToSessionContent(MSG.RECOGNITION_ERROR);
@@ -485,6 +559,9 @@ chrome.commands.onCommand.addListener(async (command) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   if (currentSession && currentSession.tabId === tabId) {
     stopRecognitionFlow();
+  }
+  if (pageTargetMemory && pageTargetMemory.tabId === tabId) {
+    setPageTargetState(null).catch(() => {});
   }
 });
 

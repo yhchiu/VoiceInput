@@ -36,6 +36,28 @@
       <button id="start" class="primary" data-i18n="popupStart"></button>
       <p class="hint" data-i18n="sidePanelHint"></p>
 
+      <div class="field scratchpad-field">
+        <label for="scratchpad" data-i18n="sidePanelScratchpad"></label>
+        <div class="scratchpad-wrap">
+          <textarea id="scratchpad" class="scratchpad" rows="2"></textarea>
+          <div class="scratchpad-actions">
+            <button id="copy-scratchpad" class="icon-button" type="button" disabled>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+            <button id="clear-scratchpad" class="icon-button" type="button" disabled>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M18 6 6 18"></path>
+                <path d="m6 6 12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <p id="scratchpad-status" class="copy-status" hidden></p>
+      </div>
+
       <div class="links">
         <button id="open-options" class="link" data-i18n="popupOpenOptions"></button>
       </div>
@@ -46,6 +68,7 @@
     <script src="../common/languages.js"></script>
     <script src="../common/i18n.js"></script>
     <script src="../common/recognizer.js"></script>
+    <script src="../content/picker.js"></script>
     <script src="sidepanel.js"></script>
   </body>
 </html>
