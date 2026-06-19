@@ -66,10 +66,50 @@
     return { wrap, input };
   }
 
+  function setRowWarning(row, warning) {
+    let msg = row.querySelector('.row-warning');
+    if (warning) {
+      if (!msg) {
+        msg = document.createElement('p');
+        msg.className = 'row-warning';
+        row.appendChild(msg);
+      }
+      msg.textContent = warning;
+      msg.hidden = false;
+      row.classList.add('row-invalid');
+    } else if (msg) {
+      msg.textContent = '';
+      msg.hidden = true;
+      row.classList.remove('row-invalid');
+    } else {
+      row.classList.remove('row-invalid');
+    }
+  }
+
+  function validateReplacements() {
+    const rows = Array.from(document.querySelectorAll('.replacement-row'));
+    const seen = new Set();
+    rows.forEach((row) => {
+      const fromValue = row.querySelector('.replacement-from').value;
+      const toValue = row.querySelector('.replacement-to').value;
+      let warning = '';
+      if (fromValue.length === 0) {
+        warning = t('optReplaceEmptyFrom');
+      } else if (seen.has(fromValue)) {
+        warning = t('optReplaceDuplicate');
+      } else if (fromValue === toValue) {
+        warning = t('optReplaceNoop');
+      }
+      if (fromValue.length > 0) seen.add(fromValue);
+      setRowWarning(row, warning);
+    });
+  }
+
   function updateReplacementEmptyState() {
     const empty = document.getElementById('replacements-empty');
     empty.hidden = document.querySelectorAll('.replacement-row').length > 0;
     updateMoveButtonStates('.replacement-row');
+    validateReplacements();
   }
 
   let undoTimer = null;
@@ -219,8 +259,9 @@
       () => { updateReplacementEmptyState(); saveReplacementsNow(); },
     );
 
-    from.input.addEventListener('input', scheduleReplacementSave);
-    to.input.addEventListener('input', scheduleReplacementSave);
+    const onReplacementInput = () => { scheduleReplacementSave(); validateReplacements(); };
+    from.input.addEventListener('input', onReplacementInput);
+    to.input.addEventListener('input', onReplacementInput);
 
     row.appendChild(from.wrap);
     row.appendChild(to.wrap);

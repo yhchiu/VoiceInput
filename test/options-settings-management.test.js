@@ -731,6 +731,32 @@ test('options applies replacement limits via maxlength and counters', async () =
   assert.equal(counters[1].textContent, '1/500');
 });
 
+test('options flags empty and duplicate replacement keys inline', async () => {
+  const harness = await bootOptionsPage({
+    initialSettings: {
+      replacements: [
+        { from: 'a', to: '1' },
+        { from: 'a', to: '2' },
+      ],
+    },
+  });
+
+  let rows = harness.document.querySelectorAll('.replacement-row');
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].classList.contains('row-invalid'), false);
+  assert.equal(rows[1].classList.contains('row-invalid'), true);
+  assert.equal(rows[1].querySelector('.row-warning').textContent, 'optReplaceDuplicate');
+
+  const from0 = rows[0].querySelector('.replacement-from');
+  from0.value = '';
+  await from0.dispatch('input');
+
+  rows = harness.document.querySelectorAll('.replacement-row');
+  assert.equal(rows[0].classList.contains('row-invalid'), true);
+  assert.equal(rows[0].querySelector('.row-warning').textContent, 'optReplaceEmptyFrom');
+  assert.equal(rows[1].classList.contains('row-invalid'), false);
+});
+
 test('options reorders replacement rules with the move controls', async () => {
   const harness = await bootOptionsPage({
     initialSettings: {

@@ -353,6 +353,18 @@ button.ghost.danger:hover {
   font-weight: 600;
 }
 
+/* Inline row validation */
+.row-invalid {
+  border-color: #fca5a5 !important;
+}
+.row-warning {
+  grid-column: 1 / -1;
+  margin: 2px 0 0 0;
+  font-size: 11px;
+  color: #b45309;
+}
+.row-warning[hidden] { display: none; }
+
 /* Row action controls (reorder + remove) */
 .row-actions {
   display: flex;
