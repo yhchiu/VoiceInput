@@ -6,6 +6,7 @@
   let restarting = false;
   let recentResultText = '';
   let copyStatusTimer = null;
+  let phraseStatusTimer = null;
 
   function applyI18n() {
     document.querySelectorAll('[data-i18n]').forEach((el) => {
@@ -47,6 +48,7 @@
     const continuous = document.getElementById('continuous');
     continuous.checked = !!settings.continuous;
     continuous.closest('.toggle-row').title = t('optContinuousHint');
+    renderCommonPhrases(settings.commonPhrases);
   }
 
   async function restartRecognition() {
@@ -100,6 +102,101 @@
       status.textContent = '';
       status.classList.remove('is-error');
     }, 1500);
+  }
+
+  function setPhraseStatus(message, isError = false) {
+    const status = document.getElementById('phrase-status');
+    status.textContent = message;
+    status.hidden = false;
+    status.classList.toggle('is-error', isError);
+    if (phraseStatusTimer) clearTimeout(phraseStatusTimer);
+    phraseStatusTimer = setTimeout(() => {
+      status.hidden = true;
+      status.textContent = '';
+      status.classList.remove('is-error');
+    }, 1500);
+  }
+
+  function phrasePreview(text) {
+    const next = String(text || '').replace(/\s+/g, ' ').trim();
+    return next.length > 48 ? next.slice(0, 48) + '…' : next;
+  }
+
+  function renderCommonPhrases(commonPhrases) {
+    const list = document.getElementById('common-phrases');
+    const empty = document.getElementById('common-phrases-empty');
+    if (!list || !empty) return;
+    const phrases = globalThis.viNormalizeCommonPhrases(commonPhrases);
+    list.innerHTML = '';
+    empty.hidden = phrases.length > 0;
+    const count = document.getElementById('common-phrases-count');
+    if (count) {
+      count.textContent = String(phrases.length);
+      count.hidden = phrases.length === 0;
+    }
+
+    phrases.forEach((phrase) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'phrase-button';
+      button.title = phrase.text;
+      const title = document.createElement('span');
+      title.className = 'phrase-title';
+      title.textContent = phrase.title;
+      button.appendChild(title);
+      const preview = document.createElement('span');
+      preview.className = 'phrase-preview';
+      preview.textContent = phrasePreview(phrase.text);
+      button.appendChild(preview);
+      button.addEventListener('click', () => insertCommonPhrase(phrase.text));
+      list.appendChild(button);
+    });
+  }
+
+  async function insertCommonPhrase(text) {
+    try {
+      const res = await chrome.runtime.sendMessage({
+        target: TARGETS.BACKGROUND,
+        action: MSG.INSERT_TEXT,
+        text,
+      });
+      if (res && res.ok) {
+        window.close();
+        return;
+      }
+      setPhraseStatus(t('commonPhraseInsertFailed'), true);
+    } catch (_) {
+      setPhraseStatus(t('commonPhraseInsertFailed'), true);
+    }
+  }
+
+  function isPhraseMenuOpen() {
+    const toggle = document.getElementById('common-phrases-toggle');
+    return !!toggle && toggle.getAttribute('aria-expanded') === 'true';
+  }
+
+  function setPhraseMenuOpen(open) {
+    const toggle = document.getElementById('common-phrases-toggle');
+    const panel = document.getElementById('common-phrases-panel');
+    if (!toggle || !panel) return;
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    panel.hidden = !open;
+  }
+
+  function setupPhraseMenu() {
+    const toggle = document.getElementById('common-phrases-toggle');
+    const field = toggle && toggle.closest('.common-phrases-field');
+    if (!toggle || !field) return;
+    toggle.addEventListener('click', () => setPhraseMenuOpen(!isPhraseMenuOpen()));
+    document.addEventListener('click', (e) => {
+      if (isPhraseMenuOpen() && !field.contains(e.target)) setPhraseMenuOpen(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isPhraseMenuOpen()) {
+        setPhraseMenuOpen(false);
+        toggle.focus();
+      }
+    });
   }
 
   async function refreshRecentResult() {
@@ -167,6 +264,8 @@
     });
 
     document.getElementById('copy-recent').addEventListener('click', copyRecentResult);
+
+    setupPhraseMenu();
 
     document.getElementById('open-options').addEventListener('click', () => {
       chrome.runtime.openOptionsPage();

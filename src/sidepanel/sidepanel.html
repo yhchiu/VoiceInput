@@ -36,6 +36,23 @@
       <button id="start" class="primary" data-i18n="popupStart"></button>
       <p class="hint" data-i18n="sidePanelHint"></p>
 
+      <div class="field common-phrases-field">
+        <button type="button" id="common-phrases-toggle" class="phrase-toggle" aria-expanded="false" aria-controls="common-phrases-panel">
+          <span class="phrase-toggle-label" data-i18n="commonPhrases"></span>
+          <span class="phrase-toggle-meta">
+            <span id="common-phrases-count" class="phrase-toggle-count" hidden></span>
+            <svg class="phrase-toggle-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m6 9 6 6 6-6"></path>
+            </svg>
+          </span>
+        </button>
+        <div id="common-phrases-panel" class="phrase-panel" hidden>
+          <div id="common-phrases" class="phrase-list"></div>
+          <p id="common-phrases-empty" class="empty-state" data-i18n="commonPhrasesEmpty"></p>
+        </div>
+        <p id="common-phrase-status" class="copy-status" hidden></p>
+      </div>
+
       <div class="field scratchpad-field">
         <label for="scratchpad" data-i18n="sidePanelScratchpad"></label>
         <div class="scratchpad-wrap">

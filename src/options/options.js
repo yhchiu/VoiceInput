@@ -110,6 +110,89 @@
     updateReplacementEmptyState();
   }
 
+  function createCommonPhraseControl(labelKey, className, value, multiline = false) {
+    const wrap = document.createElement('div');
+    wrap.className = 'common-phrase-input';
+    const label = document.createElement('label');
+    label.textContent = t(labelKey);
+    wrap.appendChild(label);
+    const input = document.createElement(multiline ? 'textarea' : 'input');
+    if (!multiline) input.type = 'text';
+    input.className = className;
+    input.value = value || '';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    input.setAttribute('aria-label', t(labelKey));
+    wrap.appendChild(input);
+    return { wrap, input };
+  }
+
+  function updateCommonPhraseEmptyState() {
+    const empty = document.getElementById('common-phrases-empty');
+    empty.hidden = document.querySelectorAll('.common-phrase-row').length > 0;
+  }
+
+  function readCommonPhraseRows() {
+    const rows = Array.from(document.querySelectorAll('.common-phrase-row'));
+    return globalThis.viNormalizeCommonPhrases(rows.map((row) => ({
+      title: row.querySelector('.common-phrase-title').value,
+      text: row.querySelector('.common-phrase-text').value,
+    })));
+  }
+
+  let commonPhraseSaveTimer = null;
+  async function saveCommonPhrasesNow() {
+    if (commonPhraseSaveTimer) {
+      clearTimeout(commonPhraseSaveTimer);
+      commonPhraseSaveTimer = null;
+    }
+    await save({ commonPhrases: readCommonPhraseRows() });
+  }
+
+  function scheduleCommonPhraseSave() {
+    if (commonPhraseSaveTimer) clearTimeout(commonPhraseSaveTimer);
+    commonPhraseSaveTimer = setTimeout(saveCommonPhrasesNow, 450);
+  }
+
+  function appendCommonPhraseRow(item = {}, focus = false) {
+    const list = document.getElementById('common-phrases');
+    const row = document.createElement('div');
+    row.className = 'common-phrase-row';
+
+    const title = createCommonPhraseControl('optCommonPhraseTitle', 'common-phrase-title', item.title);
+    const text = createCommonPhraseControl('optCommonPhraseText', 'common-phrase-text', item.text, true);
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'ghost danger';
+    remove.textContent = t('optRemoveCommonPhrase');
+
+    title.input.addEventListener('input', scheduleCommonPhraseSave);
+    text.input.addEventListener('input', scheduleCommonPhraseSave);
+    remove.addEventListener('click', () => {
+      row.remove();
+      updateCommonPhraseEmptyState();
+      saveCommonPhrasesNow();
+    });
+
+    row.appendChild(title.wrap);
+    row.appendChild(text.wrap);
+    row.appendChild(remove);
+    list.appendChild(row);
+    updateCommonPhraseEmptyState();
+    if (focus) title.input.focus();
+  }
+
+  function renderCommonPhrases(commonPhrases) {
+    if (commonPhraseSaveTimer) {
+      clearTimeout(commonPhraseSaveTimer);
+      commonPhraseSaveTimer = null;
+    }
+    const list = document.getElementById('common-phrases');
+    list.innerHTML = '';
+    globalThis.viNormalizeCommonPhrases(commonPhrases).forEach((item) => appendCommonPhraseRow(item));
+    updateCommonPhraseEmptyState();
+  }
+
   function loadAboutInfo() {
     const version = chrome.runtime && typeof chrome.runtime.getManifest === 'function'
       ? chrome.runtime.getManifest().version
@@ -394,6 +477,7 @@
     document.getElementById('continuous').checked = s.continuous;
     document.getElementById('interimResults').checked = s.interimResults;
     renderReplacements(s.replacements);
+    renderCommonPhrases(s.commonPhrases);
   }
 
   let savedTimer = null;
@@ -431,6 +515,7 @@
     document.getElementById('continuous').addEventListener('change', (e) => save({ continuous: e.target.checked }));
     document.getElementById('interimResults').addEventListener('change', (e) => save({ interimResults: e.target.checked }));
     document.getElementById('add-replacement').addEventListener('click', () => appendReplacementRow({}, true));
+    document.getElementById('add-common-phrase').addEventListener('click', () => appendCommonPhraseRow({}, true));
     document.getElementById('export-settings').addEventListener('click', exportSettings);
     document.getElementById('import-settings').addEventListener('click', () => {
       const input = document.getElementById('import-settings-file');

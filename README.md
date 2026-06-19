@@ -13,6 +13,7 @@ It uses the browser Web Speech API. When Chrome returns more than one possible r
 - Can ask Chrome for 1 to 10 possible speech results.
 - Shows a picker when there is more than one result.
 - Saves settings with `chrome.storage.sync`, so they can sync with your Chrome profile.
+- Lets you save common phrases and insert them from the popup or side panel.
 
 ## Install
 
@@ -59,6 +60,7 @@ You can change:
 - The maximum number of alternatives.
 - Whether to insert automatically when only one result is returned.
 - Advanced options such as continuous mode and interim results.
+- Common phrases for quick insertion from the popup or side panel.
 
 To change the keyboard shortcut, open `chrome://extensions/shortcuts`.
 
@@ -71,11 +73,13 @@ To change the keyboard shortcut, open `chrome://extensions/shortcuts`.
 
 ## Privacy
 
-This extension does not store or upload your audio or text.
+This extension does not upload your audio or text through its own servers.
 
 Speech recognition is handled by the browser. In Chrome, audio may be sent to Google's speech service.
 
 Settings are saved in `chrome.storage.sync` and may sync through your Chrome profile.
+
+Common phrases are saved as settings. Scratchpad text is saved only if you enable scratchpad saving.
 
 ## License
 

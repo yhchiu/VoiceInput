@@ -13,6 +13,10 @@
   const SCRATCHPAD_SYNC_MAX_BYTES = 7600;
   const SCRATCHPAD_LOCAL_MAX_BYTES = 512 * 1024;
   const SCRATCHPAD_STORAGE_OVERHEAD_BYTES = 512;
+  const COMMON_PHRASES_MAX_ITEMS = 50;
+  const COMMON_PHRASE_TITLE_MAX_CHARS = 80;
+  const COMMON_PHRASE_TEXT_MAX_CHARS = 1000;
+  const COMMON_PHRASES_MAX_BYTES = 5000;
 
   const DEFAULTS = Object.freeze({
     maxAlternatives: 3,
@@ -23,6 +27,7 @@
     sidePanelMode: false,
     scratchpadStorageMode: SCRATCHPAD_STORAGE_MODES.NONE,
     replacements: [],
+    commonPhrases: [],
   });
 
   function normalizeReplacementEntry(item) {
@@ -44,6 +49,55 @@
       if (normalized) out.push(normalized);
     });
     return out.slice(0, 50);
+  }
+
+  function truncateCodePoints(text, maxChars) {
+    return Array.from(text).slice(0, maxChars).join('');
+  }
+
+  function commonPhraseTitleFromText(text) {
+    return truncateCodePoints(text.trim().split(/\s+/).join(' '), COMMON_PHRASE_TITLE_MAX_CHARS);
+  }
+
+  function normalizeCommonPhraseEntry(item) {
+    if (!item || typeof item !== 'object') return null;
+    const rawText = typeof item.text === 'string' ? item.text : '';
+    if (!rawText.trim()) return null;
+    const text = truncateCodePoints(rawText, COMMON_PHRASE_TEXT_MAX_CHARS);
+    const rawTitle = typeof item.title === 'string' ? item.title.trim() : '';
+    const title = truncateCodePoints(rawTitle || commonPhraseTitleFromText(text), COMMON_PHRASE_TITLE_MAX_CHARS);
+    return { title, text };
+  }
+
+  function normalizeCommonPhrases(value) {
+    if (!Array.isArray(value)) return [];
+    const out = [];
+    let usedBytes = 0;
+
+    for (const item of value) {
+      if (out.length >= COMMON_PHRASES_MAX_ITEMS) break;
+      const normalized = normalizeCommonPhraseEntry(item);
+      if (!normalized) continue;
+
+      const titleBytes = viUtf8ByteLength(normalized.title);
+      let text = normalized.text;
+      let textBytes = viUtf8ByteLength(text);
+      const remaining = COMMON_PHRASES_MAX_BYTES - usedBytes;
+      if (remaining <= 0) break;
+
+      if (titleBytes + textBytes > remaining) {
+        const textBudget = remaining - titleBytes;
+        if (textBudget <= 0) break;
+        text = truncateUtf8(text, textBudget).text;
+        if (!text.trim()) break;
+        textBytes = viUtf8ByteLength(text);
+      }
+
+      out.push({ title: normalized.title, text });
+      usedBytes += titleBytes + textBytes;
+    }
+
+    return out;
   }
 
   function clampMaxAlternatives(v) {
@@ -71,6 +125,7 @@
     if ('scratchpadStorageMode' in out) out.scratchpadStorageMode = normalizeScratchpadStorageMode(out.scratchpadStorageMode);
     if ('lang' in out && typeof out.lang !== 'string') delete out.lang;
     if ('replacements' in out) out.replacements = normalizeReplacements(out.replacements);
+    if ('commonPhrases' in out) out.commonPhrases = normalizeCommonPhrases(out.commonPhrases);
     return out;
   }
 
@@ -315,6 +370,7 @@
   globalThis.VI_SCRATCHPAD_STORAGE_MODES = SCRATCHPAD_STORAGE_MODES;
   globalThis.VI_DEFAULT_SETTINGS = DEFAULTS;
   globalThis.viNormalizeReplacements = normalizeReplacements;
+  globalThis.viNormalizeCommonPhrases = normalizeCommonPhrases;
   globalThis.viNormalizeShortcut = normalizeShortcut;
   globalThis.viCreateSettingsExportPayload = viCreateSettingsExportPayload;
   globalThis.viParseSettingsImportPayload = viParseSettingsImportPayload;

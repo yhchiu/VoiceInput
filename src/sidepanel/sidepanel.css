@@ -174,6 +174,111 @@ button.link:focus-visible {
   margin: 9px 0 12px 0;
   line-height: 1.5;
 }
+.phrase-toggle {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: left;
+}
+.phrase-toggle:not(:disabled):hover { border-color: #c4b5fd; }
+.phrase-toggle:focus-visible {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+}
+.phrase-toggle-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.phrase-toggle-meta {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+}
+.phrase-toggle-count {
+  min-width: 16px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ede9fe;
+  color: #5b21b6;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+}
+.phrase-toggle-count[hidden] { display: none; }
+.phrase-toggle-chevron {
+  flex: 0 0 auto;
+  transition: transform 0.15s ease;
+}
+.phrase-toggle[aria-expanded="true"] .phrase-toggle-chevron { transform: rotate(180deg); }
+.phrase-panel { margin-top: 6px; }
+.phrase-panel[hidden] { display: none; }
+.phrase-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 170px;
+  overflow-y: auto;
+}
+.phrase-button {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #0f172a;
+  text-align: left;
+}
+.phrase-button:not(:disabled):hover {
+  border-color: #c4b5fd;
+  background: #f5f3ff;
+}
+.phrase-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+  border-color: #7c3aed;
+}
+.phrase-title,
+.phrase-preview {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.phrase-title {
+  font-size: 12px;
+  font-weight: 700;
+}
+.phrase-preview {
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 11px;
+}
+.empty-state {
+  margin: 6px 0 0 0;
+  padding: 9px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  color: #94a3b8;
+  background: #fff;
+  font-size: 11px;
+}
+.empty-state[hidden] { display: none; }
 .scratchpad-field {
   margin-bottom: 12px;
 }

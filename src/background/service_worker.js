@@ -195,6 +195,21 @@ async function sendToSessionContent(action, payload = {}) {
   return sendToContentTarget(currentSession, action, payload);
 }
 
+async function getTextInsertionTarget(originTabId) {
+  const pageTarget = await getCurrentPageTargetState();
+  if (pageTarget) return pageTarget;
+  return getActiveTabFrame(originTabId);
+}
+
+async function insertTextFlow(originTabId, text) {
+  if (typeof text !== 'string' || text.length === 0) {
+    return { ok: false, error: 'empty-text' };
+  }
+  const target = await getTextInsertionTarget(originTabId);
+  if (!target) return { ok: false, error: 'no-active-tab' };
+  return sendToContentTarget(target, MSG.INSERT_TEXT, { text });
+}
+
 async function startContentRecognitionFlow(originTabId) {
   if (currentSession) await stopRecognitionFlow();
   sidePanelPickerTarget = null;
@@ -363,6 +378,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case MSG.STOP_RECOGNITION: {
         await stopRecognitionFlow();
         sendResponse({ ok: true });
+        return;
+      }
+
+      case MSG.INSERT_TEXT: {
+        const tabId = sender && sender.tab && sender.tab.id;
+        const result = await insertTextFlow(typeof tabId === 'number' ? tabId : undefined, msg.text);
+        sendResponse(result);
         return;
       }
 

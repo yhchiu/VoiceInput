@@ -329,6 +329,53 @@ button.ghost.danger:hover {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-ring);
 }
+
+/* Common phrases */
+.common-phrase-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 0 12px 0;
+}
+.common-phrase-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.32fr) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+}
+.common-phrase-input label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-mute);
+}
+.common-phrase-input input,
+.common-phrase-input textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  background: #fff;
+  color: var(--text);
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.common-phrase-input textarea {
+  min-height: 70px;
+  resize: vertical;
+  line-height: 1.5;
+}
+.common-phrase-input input:focus,
+.common-phrase-input textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
 .empty-state {
   margin: 14px 0 12px 0;
   padding: 12px;
@@ -523,6 +570,10 @@ button.ghost.danger:hover {
   .nav-item { flex: 1 0 auto; justify-content: center; }
   .panel { padding: 8px 18px; }
   .replacement-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .common-phrase-row {
     grid-template-columns: 1fr;
     align-items: stretch;
   }

@@ -58,6 +58,7 @@ class FakeElement {
     this.type = '';
     this.files = [];
     this.clicked = false;
+    this.removed = false;
   }
 
   set innerHTML(value) {
@@ -87,10 +88,12 @@ class FakeElement {
   appendChild(child) {
     this.children.push(child);
     child.parentNode = this;
+    child.removed = false;
     return child;
   }
 
   remove() {
+    this.removed = true;
     if (!this.parentNode) return;
     this.parentNode.children = this.parentNode.children.filter((child) => child !== this);
     this.parentNode = null;
@@ -120,8 +123,26 @@ class FakeElement {
     await this.dispatch('click');
   }
 
-  querySelector() {
-    return null;
+  focus() {
+    this.focused = true;
+  }
+
+  querySelector(selector) {
+    const matches = this.querySelectorAll(selector);
+    return matches[0] || null;
+  }
+
+  querySelectorAll(selector) {
+    const out = [];
+    const visit = (element) => {
+      if (!element || element.removed || !element.classList) return;
+      if (selector.startsWith('.') && element.classList.contains(selector.slice(1))) {
+        out.push(element);
+      }
+      (element.children || []).forEach(visit);
+    };
+    this.children.forEach(visit);
+    return out;
   }
 }
 
@@ -176,12 +197,20 @@ class FakeDocument {
 
   querySelectorAll(selector) {
     const all = [this.body, ...this.elements.values(), ...this.created];
+    const isRemoved = (element) => {
+      let current = element;
+      while (current) {
+        if (current.removed) return true;
+        current = current.parentNode;
+      }
+      return false;
+    };
     if (selector === '[data-i18n]') {
-      return all.filter((element) => element.getAttribute && element.getAttribute('data-i18n'));
+      return all.filter((element) => !isRemoved(element) && element.getAttribute && element.getAttribute('data-i18n'));
     }
     if (selector.startsWith('.')) {
       const className = selector.slice(1);
-      return all.filter((element) => element.classList && element.classList.contains(className));
+      return all.filter((element) => !isRemoved(element) && element.classList && element.classList.contains(className));
     }
     return [];
   }
@@ -235,6 +264,8 @@ function primeOptionsDom(document) {
     'changelog-empty',
     'replacements',
     'replacements-empty',
+    'common-phrases',
+    'common-phrases-empty',
     'maxAlternatives',
     'lang',
     'autoInsertIfSingle',
@@ -242,6 +273,7 @@ function primeOptionsDom(document) {
     'continuous',
     'interimResults',
     'add-replacement',
+    'add-common-phrase',
     'export-settings',
     'export-settings-status',
     'import-settings',
@@ -383,7 +415,11 @@ test('settings management helpers create and parse compatible payloads', () => {
   });
 
   const payload = context.viCreateSettingsExportPayload(
-    { maxAlternatives: 4, futureSetting: { enabled: true } },
+    {
+      maxAlternatives: 4,
+      futureSetting: { enabled: true },
+      commonPhrases: [{ title: 'Greeting', text: 'Hello' }],
+    },
     [
       { name: 'toggle-recognition', description: 42, shortcut: 'Ctrl+Shift+Y' },
       null,
@@ -396,6 +432,7 @@ test('settings management helpers create and parse compatible payloads', () => {
   assert.equal(payload.exportedAt, '2026-06-19T00:00:00.000Z');
   assert.equal(payload.settings.maxAlternatives, 4);
   assert.equal(payload.settings.futureSetting.enabled, true);
+  assert.equal(payload.settings.commonPhrases[0].title, 'Greeting');
   assert.equal(payload.shortcuts.length, 2);
   assert.equal(payload.shortcuts[0].name, 'toggle-recognition');
   assert.equal(payload.shortcuts[0].description, '');
@@ -405,11 +442,16 @@ test('settings management helpers create and parse compatible payloads', () => {
   const wrapped = context.viParseSettingsImportPayload({
     type: 'VoiceInputSettings',
     version: 99,
-    settings: { maxAlternatives: 2, unknownFutureKey: 'kept' },
+    settings: {
+      maxAlternatives: 2,
+      unknownFutureKey: 'kept',
+      commonPhrases: [{ title: '', text: 'Wrapped phrase' }],
+    },
     shortcuts: [{ name: 'cmd', description: 'Command', shortcut: 12 }],
   });
   assert.equal(wrapped.settings.maxAlternatives, 2);
   assert.equal(wrapped.settings.unknownFutureKey, 'kept');
+  assert.equal(wrapped.settings.commonPhrases[0].text, 'Wrapped phrase');
   assert.equal(wrapped.shortcuts.length, 1);
   assert.equal(wrapped.shortcuts[0].name, 'cmd');
   assert.equal(wrapped.shortcuts[0].description, 'Command');
@@ -431,6 +473,7 @@ test('options export writes a versioned settings payload with normalized shortcu
       maxAlternatives: 5,
       lang: 'zh-TW',
       scratchpadStorageMode: 'local',
+      commonPhrases: [{ title: 'Greeting', text: 'Hello' }],
     },
     commands: [
       { name: 'toggle-recognition', description: 42, shortcut: 'Ctrl+Shift+Y' },
@@ -448,6 +491,8 @@ test('options export writes a versioned settings payload with normalized shortcu
   assert.equal(payload.settings.maxAlternatives, 5);
   assert.equal(payload.settings.lang, 'zh-TW');
   assert.equal(payload.settings.scratchpadStorageMode, 'local');
+  assert.equal(payload.settings.commonPhrases[0].title, 'Greeting');
+  assert.equal(payload.settings.commonPhrases[0].text, 'Hello');
   assert.equal(payload.shortcuts.length, 2);
   assert.equal(payload.shortcuts[0].name, 'toggle-recognition');
   assert.equal(payload.shortcuts[0].description, '');
@@ -475,6 +520,7 @@ test('options import accepts legacy raw settings and fills new defaults', async 
   assert.equal(saved.maxAlternatives, 1);
   assert.equal(saved.lang, 'fr-FR');
   assert.equal(saved.scratchpadStorageMode, 'none');
+  assert.equal(saved.commonPhrases.length, 0);
   assert.equal(saved.autoInsertIfSingle, true);
   assert.equal(harness.document.getElementById('import-settings-status').textContent, 'optSettingsImported');
 });
@@ -488,6 +534,10 @@ test('options import accepts wrapped future settings and restores normalized sho
     settings: {
       maxAlternatives: 99,
       scratchpadStorageMode: 'sync',
+      commonPhrases: [
+        { title: '', text: 'Imported phrase' },
+        { title: 'Ignored', text: '' },
+      ],
       futureSetting: { enabled: true },
     },
     shortcuts: [
@@ -499,6 +549,9 @@ test('options import accepts wrapped future settings and restores normalized sho
   const saved = harness.storage.syncData[SETTINGS_KEY];
   assert.equal(saved.maxAlternatives, 10);
   assert.equal(saved.scratchpadStorageMode, 'sync');
+  assert.equal(saved.commonPhrases.length, 1);
+  assert.equal(saved.commonPhrases[0].title, 'Imported phrase');
+  assert.equal(saved.commonPhrases[0].text, 'Imported phrase');
   assert.equal(saved.futureSetting.enabled, true);
   assert.equal(harness.updatedCommands.length, 1);
   assert.equal(harness.updatedCommands[0].name, 'toggle-recognition');
@@ -539,6 +592,40 @@ test('options import reports unsupported shortcut restore separately', async () 
   });
 
   assert.match(harness.document.getElementById('import-settings-status').textContent, /^optSettingsImportedShortcutUnsupported/);
+});
+
+test('options common phrase rows load, edit, and remove saved phrases', async () => {
+  const harness = await bootOptionsPage({
+    initialSettings: {
+      commonPhrases: [{ title: 'Greeting', text: 'Hello' }],
+    },
+  });
+
+  let rows = harness.document.querySelectorAll('.common-phrase-row');
+  assert.equal(rows.length, 1);
+  const title = rows[0].querySelector('.common-phrase-title');
+  const text = rows[0].querySelector('.common-phrase-text');
+  assert.equal(title.value, 'Greeting');
+  assert.equal(text.value, 'Hello');
+
+  title.value = 'Updated';
+  text.value = 'Updated text';
+  await text.dispatch('input');
+  await harness.timers[harness.timers.length - 1].callback();
+
+  let saved = harness.storage.syncData[SETTINGS_KEY];
+  assert.equal(saved.commonPhrases.length, 1);
+  assert.equal(saved.commonPhrases[0].title, 'Updated');
+  assert.equal(saved.commonPhrases[0].text, 'Updated text');
+
+  await rows[0].children[2].click();
+  await flushAsync();
+  saved = harness.storage.syncData[SETTINGS_KEY];
+  assert.equal(saved.commonPhrases.length, 0);
+
+  rows = harness.document.querySelectorAll('.common-phrase-row');
+  assert.equal(rows.length, 0);
+  assert.equal(harness.document.getElementById('common-phrases-empty').hidden, false);
 });
 
 test('options import reports partial shortcut restore failures', async () => {

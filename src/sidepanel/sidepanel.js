@@ -25,6 +25,7 @@
   let scratchpadStatusTimer = null;
   let scratchpadSaveTimer = null;
   let scratchpadStorageMode = 'none';
+  let commonPhraseStatusTimer = null;
   let activeScratchpadPicker = null;
   let activeScratchpadInterimPreview = null;
 
@@ -128,6 +129,7 @@
     scratchpadStorageMode = globalThis.viNormalizeScratchpadStorageMode(settings.scratchpadStorageMode);
     const storage = document.getElementById('scratchpad-storage');
     if (storage) storage.value = scratchpadStorageMode;
+    renderCommonPhrases(settings.commonPhrases);
   }
 
   function getScratchpad() {
@@ -251,6 +253,106 @@
       status.textContent = '';
       status.classList.remove('is-error');
     }, 1500);
+  }
+
+  function setCommonPhraseStatus(message, isError = false) {
+    const status = document.getElementById('common-phrase-status');
+    status.textContent = message;
+    status.hidden = false;
+    status.classList.toggle('is-error', isError);
+    if (commonPhraseStatusTimer) clearTimeout(commonPhraseStatusTimer);
+    commonPhraseStatusTimer = setTimeout(() => {
+      status.hidden = true;
+      status.textContent = '';
+      status.classList.remove('is-error');
+    }, 1500);
+  }
+
+  function phrasePreview(text) {
+    const next = String(text || '').replace(/\s+/g, ' ').trim();
+    return next.length > 56 ? next.slice(0, 56) + '…' : next;
+  }
+
+  function renderCommonPhrases(commonPhrases) {
+    const list = document.getElementById('common-phrases');
+    const empty = document.getElementById('common-phrases-empty');
+    if (!list || !empty) return;
+    const phrases = globalThis.viNormalizeCommonPhrases(commonPhrases);
+    list.innerHTML = '';
+    empty.hidden = phrases.length > 0;
+    const count = document.getElementById('common-phrases-count');
+    if (count) {
+      count.textContent = String(phrases.length);
+      count.hidden = phrases.length === 0;
+    }
+
+    phrases.forEach((phrase) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'phrase-button';
+      button.title = phrase.text;
+      const title = document.createElement('span');
+      title.className = 'phrase-title';
+      title.textContent = phrase.title;
+      button.appendChild(title);
+      const preview = document.createElement('span');
+      preview.className = 'phrase-preview';
+      preview.textContent = phrasePreview(phrase.text);
+      button.appendChild(preview);
+      button.addEventListener('click', () => insertCommonPhrase(phrase.text));
+      list.appendChild(button);
+    });
+  }
+
+  async function insertCommonPhrase(text) {
+    const targetMode = await resolveStartTargetMode();
+    if (targetMode === 'scratchpad') {
+      insertScratchpadText(text);
+      setCommonPhraseStatus(t('commonPhraseInserted'));
+      setPhraseMenuOpen(false);
+      return;
+    }
+
+    try {
+      const res = await sendBackground(MSG.INSERT_TEXT, { text });
+      if (res && res.ok) {
+        setCommonPhraseStatus(t('commonPhraseInserted'));
+        setPhraseMenuOpen(false);
+      } else {
+        setCommonPhraseStatus(t('commonPhraseInsertFailed'), true);
+      }
+    } catch (_) {
+      setCommonPhraseStatus(t('commonPhraseInsertFailed'), true);
+    }
+  }
+
+  function isPhraseMenuOpen() {
+    const toggle = document.getElementById('common-phrases-toggle');
+    return !!toggle && toggle.getAttribute('aria-expanded') === 'true';
+  }
+
+  function setPhraseMenuOpen(open) {
+    const toggle = document.getElementById('common-phrases-toggle');
+    const panel = document.getElementById('common-phrases-panel');
+    if (!toggle || !panel) return;
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    panel.hidden = !open;
+  }
+
+  function setupPhraseMenu() {
+    const toggle = document.getElementById('common-phrases-toggle');
+    const field = toggle && toggle.closest('.common-phrases-field');
+    if (!toggle || !field) return;
+    toggle.addEventListener('click', () => setPhraseMenuOpen(!isPhraseMenuOpen()));
+    document.addEventListener('click', (e) => {
+      if (isPhraseMenuOpen() && !field.contains(e.target)) setPhraseMenuOpen(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isPhraseMenuOpen()) {
+        setPhraseMenuOpen(false);
+        toggle.focus();
+      }
+    });
   }
 
   function clearScratchpadSaveTimer() {
@@ -826,6 +928,8 @@
 
     document.getElementById('copy-recent').addEventListener('click', copyRecentResult);
     document.addEventListener('keydown', forwardPickerKey, true);
+
+    setupPhraseMenu();
 
     document.getElementById('open-options').addEventListener('click', () => {
       chrome.runtime.openOptionsPage();

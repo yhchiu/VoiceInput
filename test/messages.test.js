@@ -7,6 +7,7 @@ test('messages exposes frozen shared constants', () => {
   const context = loadClassicScript('src/common/messages.js');
 
   assert.equal(context.VI_MSG.START_RECOGNITION, 'START_RECOGNITION');
+  assert.equal(context.VI_MSG.INSERT_TEXT, 'INSERT_TEXT');
   assert.equal(context.VI_MSG.RECOGNITION_RESULTS, 'RECOGNITION_RESULTS');
   assert.equal(context.VI_OFFSCREEN_MSG.START, 'OFFSCREEN_START');
   assert.equal(context.VI_TARGETS.BACKGROUND, 'background');

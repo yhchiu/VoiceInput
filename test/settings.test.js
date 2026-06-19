@@ -56,6 +56,8 @@ test('viGetSettings returns normalized defaults from navigator language', async 
   assert.equal(settings.scratchpadStorageMode, 'none');
   assert.equal(Array.isArray(settings.replacements), true);
   assert.equal(settings.replacements.length, 0);
+  assert.equal(Array.isArray(settings.commonPhrases), true);
+  assert.equal(settings.commonPhrases.length, 0);
 });
 
 test('viSetSettings clamps and normalizes persisted settings', async () => {
@@ -79,6 +81,11 @@ test('viSetSettings clamps and normalizes persisted settings', async () => {
       null,
       { from: 'x'.repeat(250), to: 'y'.repeat(600) },
     ],
+    commonPhrases: [
+      { title: 'Greeting', text: 'Hello' },
+      { title: '', text: 'Untitled phrase' },
+      { title: 'Ignored', text: '' },
+    ],
   });
 
   assert.equal(next.maxAlternatives, 10);
@@ -93,6 +100,10 @@ test('viSetSettings clamps and normalizes persisted settings', async () => {
   assert.equal(next.replacements[0].to, 'bar');
   assert.equal(next.replacements[1].from.length, 200);
   assert.equal(next.replacements[1].to.length, 500);
+  assert.equal(next.commonPhrases.length, 2);
+  assert.equal(next.commonPhrases[0].title, 'Greeting');
+  assert.equal(next.commonPhrases[0].text, 'Hello');
+  assert.equal(next.commonPhrases[1].title, 'Untitled phrase');
   assert.equal(storage.data[context.VI_SETTINGS_KEY].maxAlternatives, 10);
 });
 
@@ -131,6 +142,54 @@ test('viGetSettings falls back to defaults when storage fails', async () => {
 
   assert.equal(settings.lang, 'ja-JP');
   assert.equal(settings.maxAlternatives, 3);
+});
+
+test('common phrase helpers ignore invalid entries and derive missing titles', () => {
+  const context = loadClassicScript('src/common/settings.js', {
+    chrome: makeChromeStorage().chrome,
+    navigator: { language: 'en-US' },
+  });
+
+  const normalized = context.viNormalizeCommonPhrases([
+    { title: 'Greeting', text: 'Hello' },
+    { title: '', text: 'Auto title from text' },
+    { title: 'Ignored empty text', text: '   ' },
+    null,
+  ]);
+
+  assert.equal(normalized.length, 2);
+  assert.equal(normalized[0].title, 'Greeting');
+  assert.equal(normalized[0].text, 'Hello');
+  assert.equal(normalized[1].title, 'Auto title from text');
+  assert.equal(normalized[1].text, 'Auto title from text');
+});
+
+test('common phrase helpers clamp item count, text length, and UTF-8 budget', () => {
+  const context = loadClassicScript('src/common/settings.js', {
+    chrome: makeChromeStorage().chrome,
+    navigator: { language: 'en-US' },
+  });
+
+  const many = Array.from({ length: 60 }, (_, index) => ({
+    title: `Phrase ${index}`,
+    text: 'abc',
+  }));
+  assert.equal(context.viNormalizeCommonPhrases(many).length, 50);
+
+  const long = context.viNormalizeCommonPhrases([
+    {
+      title: 'x'.repeat(100),
+      text: 'y'.repeat(1200),
+    },
+  ]);
+  assert.equal(long[0].title.length, 80);
+  assert.equal(long[0].text.length, 1000);
+
+  const budgeted = context.viNormalizeCommonPhrases([
+    { title: 'A', text: '你'.repeat(3000) },
+  ]);
+  assert.equal(budgeted.length, 1);
+  assert.ok(context.viUtf8ByteLength(budgeted[0].title) + context.viUtf8ByteLength(budgeted[0].text) <= 5000);
 });
 
 test('scratchpad storage mode normalizes invalid values', async () => {

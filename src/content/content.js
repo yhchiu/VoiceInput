@@ -177,20 +177,21 @@
   }
 
   // === Insertion ===
-  function performInsertion(text) {
-    rememberRecentResult(text);
+  function performInsertion(text, options = {}) {
+    if (options.rememberRecent !== false) rememberRecentResult(text);
     if (!lastTarget || !document.contains(lastTarget)) {
       globalThis.viMakeToast(t('pickerTargetGone'));
-      return;
+      return { ok: false, error: 'no-target' };
     }
     const r = globalThis.viInsertText(lastTarget, text, lastSelection);
     if (!r.ok) {
       globalThis.viMakeToast(t('pickerTargetGone'));
-      return;
+      return r;
     }
     lastSelection = captureSelection(lastTarget) || lastSelection;
     const preview = text.length > 32 ? text.slice(0, 32) + '…' : text;
     globalThis.viMakeToast(t('toastInserted', preview));
+    return { ok: true };
   }
 
   // === Result handling ===
@@ -360,6 +361,16 @@
         endSession();
         sendResponse({ ok: true });
         return false;
+
+      case MSG.INSERT_TEXT: {
+        if (!captureForRecognition()) {
+          globalThis.viMakeToast(t('pickerNoTarget'));
+          sendResponse({ ok: false, error: 'no-target' });
+          return false;
+        }
+        sendResponse(performInsertion(msg.text || '', { rememberRecent: false }));
+        return false;
+      }
 
       case MSG.PREPARE_RECOGNITION_TARGET: {
         const ok = captureForRecognition();
