@@ -489,11 +489,14 @@ button.ghost.danger:hover {
   display: grid;
   grid-template-columns: minmax(130px, 0.32fr) minmax(0, 1fr) 116px;
   gap: 10px;
-  align-items: end;
+  align-items: start;
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: #f8fafc;
+}
+.common-phrase-row .row-actions {
+  align-self: center;
 }
 .common-phrase-input input,
 .common-phrase-input textarea {
