@@ -7,6 +7,7 @@
     phraseText: globalThis.VI_COMMON_PHRASE_TEXT_MAX_CHARS,
     phraseBytes: globalThis.VI_COMMON_PHRASES_MAX_BYTES,
   };
+  const TRASH_ICON_SVG = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>';
   const CHANGELOG_FILE = 'CHANGELOG.json';
   const CHANGELOG_REPO_URL = 'https://github.com/yhchiu/VoiceInput';
   const RELEASE_TYPE_LABELS = {
@@ -48,7 +49,7 @@
     wrap.appendChild(counter);
   }
 
-  function createReplacementInput(labelKey, className, value, maxLength) {
+  function createReplacementInput(labelKey, className, value, maxLength, placeholderKey) {
     const wrap = document.createElement('div');
     wrap.className = 'replacement-input';
     const label = document.createElement('label');
@@ -61,6 +62,7 @@
     input.autocomplete = 'off';
     input.spellcheck = false;
     input.setAttribute('aria-label', t(labelKey));
+    if (placeholderKey) input.placeholder = t(placeholderKey);
     wrap.appendChild(input);
     attachFieldCounter(wrap, input, maxLength);
     return { wrap, input };
@@ -218,8 +220,9 @@
 
     const remove = document.createElement('button');
     remove.type = 'button';
-    remove.className = 'ghost danger row-remove';
-    remove.textContent = t(removeLabelKey);
+    remove.className = 'ghost danger icon-btn row-remove';
+    remove.innerHTML = TRASH_ICON_SVG;
+    remove.setAttribute('aria-label', t(removeLabelKey));
     remove.addEventListener('click', onRemove);
 
     actions.appendChild(up);
@@ -271,8 +274,12 @@
     const row = document.createElement('div');
     row.className = 'replacement-row';
 
-    const from = createReplacementInput('optReplaceFrom', 'replacement-from', item.from, LIMITS.replacementFrom);
-    const to = createReplacementInput('optReplaceTo', 'replacement-to', item.to, LIMITS.replacementTo);
+    const from = createReplacementInput('optReplaceFrom', 'replacement-from', item.from, LIMITS.replacementFrom, 'optReplaceFromPlaceholder');
+    const to = createReplacementInput('optReplaceTo', 'replacement-to', item.to, LIMITS.replacementTo, 'optReplaceToPlaceholder');
+    const arrow = document.createElement('span');
+    arrow.className = 'row-arrow';
+    arrow.textContent = '→';
+    arrow.setAttribute('aria-hidden', 'true');
     const actions = createRowActions(
       row,
       '.replacement-row',
@@ -291,6 +298,7 @@
 
     row.setAttribute('role', 'listitem');
     row.appendChild(from.wrap);
+    row.appendChild(arrow);
     row.appendChild(to.wrap);
     row.appendChild(actions);
     insertRowAt(list, row, '.replacement-row', atIndex);
@@ -312,7 +320,7 @@
     updateReplacementEmptyState();
   }
 
-  function createCommonPhraseControl(labelKey, className, value, multiline = false, maxLength) {
+  function createCommonPhraseControl(labelKey, className, value, multiline = false, maxLength, placeholderKey) {
     const wrap = document.createElement('div');
     wrap.className = 'common-phrase-input';
     const label = document.createElement('label');
@@ -325,6 +333,7 @@
     input.autocomplete = 'off';
     input.spellcheck = false;
     input.setAttribute('aria-label', t(labelKey));
+    if (placeholderKey) input.placeholder = t(placeholderKey);
     wrap.appendChild(input);
     attachFieldCounter(wrap, input, maxLength);
     return { wrap, input };
@@ -395,8 +404,8 @@
     const row = document.createElement('div');
     row.className = 'common-phrase-row';
 
-    const title = createCommonPhraseControl('optCommonPhraseTitle', 'common-phrase-title', item.title, false, LIMITS.phraseTitle);
-    const text = createCommonPhraseControl('optCommonPhraseText', 'common-phrase-text', item.text, true, LIMITS.phraseText);
+    const title = createCommonPhraseControl('optCommonPhraseTitle', 'common-phrase-title', item.title, false, LIMITS.phraseTitle, 'optCommonPhraseTitlePlaceholder');
+    const text = createCommonPhraseControl('optCommonPhraseText', 'common-phrase-text', item.text, true, LIMITS.phraseText, 'optCommonPhraseTextPlaceholder');
     const actions = createRowActions(
       row,
       '.common-phrase-row',

@@ -731,6 +731,24 @@ test('options applies replacement limits via maxlength and counters', async () =
   assert.equal(counters[1].textContent, '1/500');
 });
 
+test('options rows expose example placeholders and a direction affordance', async () => {
+  const harness = await bootOptionsPage({
+    initialSettings: {
+      replacements: [{ from: 'a', to: '1' }],
+      commonPhrases: [{ title: '', text: 'Hello' }],
+    },
+  });
+
+  const replacementRow = harness.document.querySelectorAll('.replacement-row')[0];
+  assert.equal(replacementRow.querySelector('.replacement-from').placeholder, 'optReplaceFromPlaceholder');
+  assert.equal(replacementRow.querySelector('.replacement-to').placeholder, 'optReplaceToPlaceholder');
+  assert.notEqual(replacementRow.querySelector('.row-arrow'), null);
+
+  const phraseRow = harness.document.querySelectorAll('.common-phrase-row')[0];
+  assert.equal(phraseRow.querySelector('.common-phrase-title').placeholder, 'optCommonPhraseTitlePlaceholder');
+  assert.equal(phraseRow.querySelector('.common-phrase-text').placeholder, 'optCommonPhraseTextPlaceholder');
+});
+
 test('options gives rows list semantics and contextual action labels', async () => {
   const harness = await bootOptionsPage({
     initialSettings: {
