@@ -23,6 +23,8 @@
   let suppressScratchpadTargetTimer = null;
   let currentRecognitionTarget = 'page';
   let scratchpadStatusTimer = null;
+  let scratchpadSaveTimer = null;
+  let scratchpadStorageMode = 'none';
   let activeScratchpadPicker = null;
   let activeScratchpadInterimPreview = null;
 
@@ -123,6 +125,9 @@
     const continuous = document.getElementById('continuous');
     continuous.checked = !!settings.continuous;
     continuous.closest('.toggle-row').title = t('optContinuousHint');
+    scratchpadStorageMode = globalThis.viNormalizeScratchpadStorageMode(settings.scratchpadStorageMode);
+    const storage = document.getElementById('scratchpad-storage');
+    if (storage) storage.value = scratchpadStorageMode;
   }
 
   function getScratchpad() {
@@ -248,6 +253,77 @@
     }, 1500);
   }
 
+  function clearScratchpadSaveTimer() {
+    if (!scratchpadSaveTimer) return;
+    clearTimeout(scratchpadSaveTimer);
+    scratchpadSaveTimer = null;
+  }
+
+  async function saveScratchpadNow(showStatus = false) {
+    clearScratchpadSaveTimer();
+    const mode = globalThis.viNormalizeScratchpadStorageMode(scratchpadStorageMode);
+    if (mode === 'none') return { ok: true };
+
+    const scratchpad = getScratchpad();
+    if (!scratchpad) return { ok: false, error: 'no-scratchpad' };
+
+    const result = await globalThis.viSetScratchpadText(mode, scratchpad.value);
+    if (!result.ok) {
+      if (showStatus) setScratchpadStatus(t('sidePanelScratchpadSaveFailed'), true);
+      return result;
+    }
+
+    if (result.truncated) {
+      setScratchpadStatus(t('sidePanelScratchpadSaveTruncated'), true);
+    } else if (showStatus) {
+      setScratchpadStatus(t('sidePanelScratchpadSaved'));
+    }
+    return result;
+  }
+
+  function scheduleScratchpadSave() {
+    if (scratchpadStorageMode === 'none') return;
+    clearScratchpadSaveTimer();
+    scratchpadSaveTimer = setTimeout(() => {
+      saveScratchpadNow().catch(() => {
+        setScratchpadStatus(t('sidePanelScratchpadSaveFailed'), true);
+      });
+    }, 600);
+  }
+
+  async function restoreScratchpadFromStorage() {
+    const mode = globalThis.viNormalizeScratchpadStorageMode(scratchpadStorageMode);
+    if (mode === 'none') return;
+
+    const scratchpad = getScratchpad();
+    if (!scratchpad || scratchpad.value) return;
+
+    const saved = await globalThis.viGetScratchpadText(mode);
+    if (!saved || typeof saved.text !== 'string' || saved.text.length === 0) return;
+
+    scratchpad.value = saved.text;
+    placeScratchpadCursor(scratchpad, scratchpad.value.length, scratchpad.value.length, false);
+    updateScratchpadActions();
+  }
+
+  async function updateScratchpadStorageMode(nextMode) {
+    const previousMode = scratchpadStorageMode;
+    scratchpadStorageMode = globalThis.viNormalizeScratchpadStorageMode(nextMode);
+    await globalThis.viSetSettings({ scratchpadStorageMode });
+
+    if (scratchpadStorageMode === 'none') {
+      clearScratchpadSaveTimer();
+      await globalThis.viClearScratchpadStorage();
+      setScratchpadStatus(t('sidePanelScratchpadStorageOff'));
+      return;
+    }
+
+    const result = await saveScratchpadNow(true);
+    if (result.ok && !result.truncated && previousMode !== scratchpadStorageMode && previousMode !== 'none') {
+      await globalThis.viClearScratchpadStorage(previousMode);
+    }
+  }
+
   function insertScratchpadText(text) {
     disposeScratchpadPicker();
     const scratchpad = getScratchpad();
@@ -258,6 +334,7 @@
     const next = start + text.length;
     placeScratchpadCursor(scratchpad, next, next, inputTarget === 'scratchpad');
     updateScratchpadActions();
+    scheduleScratchpadSave();
   }
 
   async function copyScratchpad() {
@@ -288,19 +365,25 @@
     scratchpad.value = '';
     placeScratchpadCursor(scratchpad, 0, 0, inputTarget === 'scratchpad');
     updateScratchpadActions();
+    saveScratchpadNow().catch(() => {
+      setScratchpadStatus(t('sidePanelScratchpadSaveFailed'), true);
+    });
   }
 
   function setupScratchpad() {
     const scratchpad = getScratchpad();
     const copy = document.getElementById('copy-scratchpad');
     const clear = document.getElementById('clear-scratchpad');
-    if (!scratchpad || !copy || !clear) return;
+    const storage = document.getElementById('scratchpad-storage');
+    if (!scratchpad || !copy || !clear || !storage) return;
 
     scratchpad.placeholder = t('sidePanelScratchpadPlaceholder');
     copy.title = t('sidePanelCopyScratchpad');
     copy.setAttribute('aria-label', t('sidePanelCopyScratchpad'));
     clear.title = t('sidePanelClearScratchpad');
     clear.setAttribute('aria-label', t('sidePanelClearScratchpad'));
+    storage.title = t('sidePanelScratchpadStorageHint');
+    storage.setAttribute('aria-label', t('sidePanelScratchpadStorage'));
 
     scratchpad.addEventListener('pointerdown', selectScratchpadTarget);
     scratchpad.addEventListener('click', selectScratchpadTarget);
@@ -309,11 +392,23 @@
     scratchpad.addEventListener('input', () => {
       selectScratchpadTarget();
       updateScratchpadActions();
+      scheduleScratchpadSave();
+    });
+    scratchpad.addEventListener('blur', () => {
+      captureScratchpadSelection();
+      saveScratchpadNow().catch(() => {
+        setScratchpadStatus(t('sidePanelScratchpadSaveFailed'), true);
+      });
     });
     copy.addEventListener('mousedown', (e) => e.preventDefault());
     clear.addEventListener('mousedown', (e) => e.preventDefault());
     copy.addEventListener('click', copyScratchpad);
     clear.addEventListener('click', clearScratchpad);
+    storage.addEventListener('change', (e) => {
+      updateScratchpadStorageMode(e.target.value).catch(() => {
+        setScratchpadStatus(t('sidePanelScratchpadSaveFailed'), true);
+      });
+    });
     updateScratchpadActions();
     renderInputTarget();
   }
@@ -699,6 +794,7 @@
     applyI18n();
     await loadSettings();
     setupScratchpad();
+    await restoreScratchpadFromStorage();
     await refreshRecentResult();
 
     const startButton = document.getElementById('start');

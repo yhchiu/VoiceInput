@@ -216,6 +216,24 @@ button.link:focus-visible {
   height: 24px;
   background: rgba(255, 255, 255, 0.9);
 }
+.scratchpad-storage-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 7px;
+}
+.scratchpad-storage-row label {
+  flex: 0 0 auto;
+  margin: 0;
+  white-space: nowrap;
+}
+.scratchpad-storage-row select {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  font-size: 12px;
+}
 .links {
   display: flex;
   gap: 8px;
