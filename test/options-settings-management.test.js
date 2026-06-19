@@ -731,6 +731,42 @@ test('options applies replacement limits via maxlength and counters', async () =
   assert.equal(counters[1].textContent, '1/500');
 });
 
+test('options gives rows list semantics and contextual action labels', async () => {
+  const harness = await bootOptionsPage({
+    initialSettings: {
+      replacements: [{ from: 'a', to: '1' }],
+      commonPhrases: [{ title: 'Greeting', text: 'Hello' }],
+    },
+  });
+
+  const replacementRow = harness.document.querySelectorAll('.replacement-row')[0];
+  assert.equal(replacementRow.getAttribute('role'), 'listitem');
+  assert.equal(
+    replacementRow.querySelector('.row-remove').getAttribute('aria-label'),
+    'optRemoveReplacement: a → 1',
+  );
+  assert.equal(
+    replacementRow.querySelector('.row-move-up').getAttribute('aria-label'),
+    'optMoveUp: a → 1',
+  );
+
+  const phraseRow = harness.document.querySelectorAll('.common-phrase-row')[0];
+  assert.equal(phraseRow.getAttribute('role'), 'listitem');
+  assert.equal(
+    phraseRow.querySelector('.row-remove').getAttribute('aria-label'),
+    'optRemoveCommonPhrase: Greeting',
+  );
+
+  // Editing the search text refreshes the contextual labels.
+  const from = replacementRow.querySelector('.replacement-from');
+  from.value = 'b';
+  await from.dispatch('input');
+  assert.equal(
+    replacementRow.querySelector('.row-remove').getAttribute('aria-label'),
+    'optRemoveReplacement: b → 1',
+  );
+});
+
 test('options flags empty and duplicate replacement keys inline', async () => {
   const harness = await bootOptionsPage({
     initialSettings: {

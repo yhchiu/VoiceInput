@@ -66,6 +66,28 @@
     return { wrap, input };
   }
 
+  function setActionAriaLabels(row, context, removeKey) {
+    const suffix = context ? `: ${context}` : '';
+    const up = row.querySelector('.row-move-up');
+    const down = row.querySelector('.row-move-down');
+    const remove = row.querySelector('.row-remove');
+    if (up) up.setAttribute('aria-label', t('optMoveUp') + suffix);
+    if (down) down.setAttribute('aria-label', t('optMoveDown') + suffix);
+    if (remove) remove.setAttribute('aria-label', t(removeKey) + suffix);
+  }
+
+  function setReplacementAriaLabels(row) {
+    const from = row.querySelector('.replacement-from').value;
+    const to = row.querySelector('.replacement-to').value;
+    setActionAriaLabels(row, from ? `${from} → ${to}` : '', 'optRemoveReplacement');
+  }
+
+  function setCommonPhraseAriaLabels(row) {
+    const context = row.querySelector('.common-phrase-title').value
+      || row.querySelector('.common-phrase-text').value;
+    setActionAriaLabels(row, context, 'optRemoveCommonPhrase');
+  }
+
   function setRowWarning(row, warning) {
     let msg = row.querySelector('.row-warning');
     if (warning) {
@@ -259,14 +281,20 @@
       () => { updateReplacementEmptyState(); saveReplacementsNow(); },
     );
 
-    const onReplacementInput = () => { scheduleReplacementSave(); validateReplacements(); };
+    const onReplacementInput = () => {
+      scheduleReplacementSave();
+      validateReplacements();
+      setReplacementAriaLabels(row);
+    };
     from.input.addEventListener('input', onReplacementInput);
     to.input.addEventListener('input', onReplacementInput);
 
+    row.setAttribute('role', 'listitem');
     row.appendChild(from.wrap);
     row.appendChild(to.wrap);
     row.appendChild(actions);
     insertRowAt(list, row, '.replacement-row', atIndex);
+    setReplacementAriaLabels(row);
     updateReplacementEmptyState();
     if (focus) from.input.focus();
     return row;
@@ -377,14 +405,20 @@
       () => { updateCommonPhraseEmptyState(); saveCommonPhrasesNow(); },
     );
 
-    const onPhraseInput = () => { scheduleCommonPhraseSave(); updateCommonPhraseBudget(); };
+    const onPhraseInput = () => {
+      scheduleCommonPhraseSave();
+      updateCommonPhraseBudget();
+      setCommonPhraseAriaLabels(row);
+    };
     title.input.addEventListener('input', onPhraseInput);
     text.input.addEventListener('input', onPhraseInput);
 
+    row.setAttribute('role', 'listitem');
     row.appendChild(title.wrap);
     row.appendChild(text.wrap);
     row.appendChild(actions);
     insertRowAt(list, row, '.common-phrase-row', atIndex);
+    setCommonPhraseAriaLabels(row);
     updateCommonPhraseEmptyState();
     updateCommonPhraseBudget();
     if (focus) title.input.focus();
