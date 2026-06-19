@@ -290,6 +290,40 @@ button.ghost.danger:hover {
   background: #fef2f2;
 }
 
+/* Undo toast */
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: #1f2937;
+  color: #f9fafb;
+  font-size: 13px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+  z-index: 50;
+}
+.undo-toast[hidden] { display: none; }
+.undo-action {
+  background: transparent;
+  border: none;
+  color: #93c5fd;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.undo-action:hover { color: #bfdbfe; text-decoration: underline; }
+.undo-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+  border-radius: var(--radius-sm);
+}
+
 /* Field character counters */
 .field-counter {
   display: block;

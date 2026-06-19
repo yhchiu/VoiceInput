@@ -71,6 +71,43 @@
     empty.hidden = document.querySelectorAll('.replacement-row').length > 0;
   }
 
+  let undoTimer = null;
+  let pendingUndo = null;
+
+  function hideUndoToast() {
+    const toast = document.getElementById('undo-toast');
+    if (toast) toast.hidden = true;
+    pendingUndo = null;
+  }
+
+  function showUndoToast(restore) {
+    pendingUndo = restore;
+    const toast = document.getElementById('undo-toast');
+    if (!toast) return;
+    toast.hidden = false;
+    if (undoTimer) clearTimeout(undoTimer);
+    undoTimer = setTimeout(hideUndoToast, 6000);
+  }
+
+  function runPendingUndo() {
+    if (!pendingUndo) return;
+    const restore = pendingUndo;
+    if (undoTimer) clearTimeout(undoTimer);
+    hideUndoToast();
+    restore();
+  }
+
+  function insertRowAt(list, row, selector, atIndex) {
+    if (atIndex == null) {
+      list.appendChild(row);
+      return;
+    }
+    const rows = Array.from(document.querySelectorAll(selector));
+    const ref = rows[atIndex] || null;
+    if (ref) list.insertBefore(row, ref);
+    else list.appendChild(row);
+  }
+
   function readReplacementRows() {
     const rows = Array.from(document.querySelectorAll('.replacement-row'));
     return globalThis.viNormalizeReplacements(rows.map((row) => ({
@@ -93,7 +130,23 @@
     replacementSaveTimer = setTimeout(saveReplacementsNow, 450);
   }
 
-  function appendReplacementRow(item = {}, focus = false) {
+  function removeReplacementRow(row) {
+    const rows = Array.from(document.querySelectorAll('.replacement-row'));
+    const index = rows.indexOf(row);
+    const item = {
+      from: row.querySelector('.replacement-from').value,
+      to: row.querySelector('.replacement-to').value,
+    };
+    row.remove();
+    updateReplacementEmptyState();
+    saveReplacementsNow();
+    showUndoToast(() => {
+      appendReplacementRow(item, false, index);
+      saveReplacementsNow();
+    });
+  }
+
+  function appendReplacementRow(item = {}, focus = false, atIndex = null) {
     const list = document.getElementById('replacements');
     const row = document.createElement('div');
     row.className = 'replacement-row';
@@ -102,23 +155,20 @@
     const to = createReplacementInput('optReplaceTo', 'replacement-to', item.to, LIMITS.replacementTo);
     const remove = document.createElement('button');
     remove.type = 'button';
-    remove.className = 'ghost danger';
+    remove.className = 'ghost danger row-remove';
     remove.textContent = t('optRemoveReplacement');
 
     from.input.addEventListener('input', scheduleReplacementSave);
     to.input.addEventListener('input', scheduleReplacementSave);
-    remove.addEventListener('click', () => {
-      row.remove();
-      updateReplacementEmptyState();
-      saveReplacementsNow();
-    });
+    remove.addEventListener('click', () => removeReplacementRow(row));
 
     row.appendChild(from.wrap);
     row.appendChild(to.wrap);
     row.appendChild(remove);
-    list.appendChild(row);
+    insertRowAt(list, row, '.replacement-row', atIndex);
     updateReplacementEmptyState();
     if (focus) from.input.focus();
+    return row;
   }
 
   function renderReplacements(replacements) {
@@ -128,6 +178,7 @@
     }
     const list = document.getElementById('replacements');
     list.innerHTML = '';
+    hideUndoToast();
     globalThis.viNormalizeReplacements(replacements).forEach((item) => appendReplacementRow(item));
     updateReplacementEmptyState();
   }
@@ -192,7 +243,24 @@
     commonPhraseSaveTimer = setTimeout(saveCommonPhrasesNow, 450);
   }
 
-  function appendCommonPhraseRow(item = {}, focus = false) {
+  function removeCommonPhraseRow(row) {
+    const rows = Array.from(document.querySelectorAll('.common-phrase-row'));
+    const index = rows.indexOf(row);
+    const item = {
+      title: row.querySelector('.common-phrase-title').value,
+      text: row.querySelector('.common-phrase-text').value,
+    };
+    row.remove();
+    updateCommonPhraseEmptyState();
+    updateCommonPhraseBudget();
+    saveCommonPhrasesNow();
+    showUndoToast(() => {
+      appendCommonPhraseRow(item, false, index);
+      saveCommonPhrasesNow();
+    });
+  }
+
+  function appendCommonPhraseRow(item = {}, focus = false, atIndex = null) {
     const list = document.getElementById('common-phrases');
     const row = document.createElement('div');
     row.className = 'common-phrase-row';
@@ -201,26 +269,22 @@
     const text = createCommonPhraseControl('optCommonPhraseText', 'common-phrase-text', item.text, true, LIMITS.phraseText);
     const remove = document.createElement('button');
     remove.type = 'button';
-    remove.className = 'ghost danger';
+    remove.className = 'ghost danger row-remove';
     remove.textContent = t('optRemoveCommonPhrase');
 
     const onPhraseInput = () => { scheduleCommonPhraseSave(); updateCommonPhraseBudget(); };
     title.input.addEventListener('input', onPhraseInput);
     text.input.addEventListener('input', onPhraseInput);
-    remove.addEventListener('click', () => {
-      row.remove();
-      updateCommonPhraseEmptyState();
-      updateCommonPhraseBudget();
-      saveCommonPhrasesNow();
-    });
+    remove.addEventListener('click', () => removeCommonPhraseRow(row));
 
     row.appendChild(title.wrap);
     row.appendChild(text.wrap);
     row.appendChild(remove);
-    list.appendChild(row);
+    insertRowAt(list, row, '.common-phrase-row', atIndex);
     updateCommonPhraseEmptyState();
     updateCommonPhraseBudget();
     if (focus) title.input.focus();
+    return row;
   }
 
   function renderCommonPhrases(commonPhrases) {
@@ -230,6 +294,7 @@
     }
     const list = document.getElementById('common-phrases');
     list.innerHTML = '';
+    hideUndoToast();
     globalThis.viNormalizeCommonPhrases(commonPhrases).forEach((item) => appendCommonPhraseRow(item));
     updateCommonPhraseEmptyState();
     updateCommonPhraseBudget();
@@ -558,6 +623,7 @@
     document.getElementById('interimResults').addEventListener('change', (e) => save({ interimResults: e.target.checked }));
     document.getElementById('add-replacement').addEventListener('click', () => appendReplacementRow({}, true));
     document.getElementById('add-common-phrase').addEventListener('click', () => appendCommonPhraseRow({}, true));
+    document.getElementById('undo-action').addEventListener('click', runPendingUndo);
     document.getElementById('export-settings').addEventListener('click', exportSettings);
     document.getElementById('import-settings').addEventListener('click', () => {
       const input = document.getElementById('import-settings-file');

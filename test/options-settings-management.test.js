@@ -92,6 +92,18 @@ class FakeElement {
     return child;
   }
 
+  insertBefore(child, ref) {
+    child.parentNode = this;
+    child.removed = false;
+    const idx = ref ? this.children.indexOf(ref) : -1;
+    if (idx === -1) {
+      this.children.push(child);
+    } else {
+      this.children.splice(idx, 0, child);
+    }
+    return child;
+  }
+
   remove() {
     this.removed = true;
     if (!this.parentNode) return;
@@ -196,23 +208,27 @@ class FakeDocument {
   }
 
   querySelectorAll(selector) {
-    const all = [this.body, ...this.elements.values(), ...this.created];
-    const isRemoved = (element) => {
-      let current = element;
-      while (current) {
-        if (current.removed) return true;
-        current = current.parentNode;
+    // Walk the element trees in DOM order so reordering (insertBefore) and
+    // index-based queries behave like a real document.
+    const matches = (element) => {
+      if (selector === '[data-i18n]') {
+        return Boolean(element.getAttribute && element.getAttribute('data-i18n'));
+      }
+      if (selector.startsWith('.')) {
+        return Boolean(element.classList && element.classList.contains(selector.slice(1)));
       }
       return false;
     };
-    if (selector === '[data-i18n]') {
-      return all.filter((element) => !isRemoved(element) && element.getAttribute && element.getAttribute('data-i18n'));
-    }
-    if (selector.startsWith('.')) {
-      const className = selector.slice(1);
-      return all.filter((element) => !isRemoved(element) && element.classList && element.classList.contains(className));
-    }
-    return [];
+    const out = [];
+    const seen = new Set();
+    const visit = (element) => {
+      if (!element || seen.has(element) || element.removed) return;
+      seen.add(element);
+      if (matches(element)) out.push(element);
+      (element.children || []).forEach(visit);
+    };
+    [this.body, ...this.elements.values()].forEach(visit);
+    return out;
   }
 
   querySelector() {
@@ -275,6 +291,8 @@ function primeOptionsDom(document) {
     'interimResults',
     'add-replacement',
     'add-common-phrase',
+    'undo-toast',
+    'undo-action',
     'export-settings',
     'export-settings-status',
     'import-settings',
@@ -627,6 +645,40 @@ test('options common phrase rows load, edit, and remove saved phrases', async ()
   rows = harness.document.querySelectorAll('.common-phrase-row');
   assert.equal(rows.length, 0);
   assert.equal(harness.document.getElementById('common-phrases-empty').hidden, false);
+});
+
+test('options restores a removed phrase at its original position via undo', async () => {
+  const harness = await bootOptionsPage({
+    initialSettings: {
+      commonPhrases: [
+        { title: 'First', text: 'one' },
+        { title: 'Second', text: 'two' },
+        { title: 'Third', text: 'three' },
+      ],
+    },
+  });
+
+  const rows = harness.document.querySelectorAll('.common-phrase-row');
+  assert.equal(rows.length, 3);
+
+  await rows[1].querySelector('.row-remove').click();
+  await flushAsync();
+
+  let saved = harness.storage.syncData[SETTINGS_KEY];
+  assert.equal(saved.commonPhrases.length, 2);
+  assert.equal(saved.commonPhrases[0].title, 'First');
+  assert.equal(saved.commonPhrases[1].title, 'Third');
+  assert.equal(harness.document.getElementById('undo-toast').hidden, false);
+
+  await harness.document.getElementById('undo-action').click();
+  await flushAsync();
+
+  saved = harness.storage.syncData[SETTINGS_KEY];
+  assert.equal(saved.commonPhrases.length, 3);
+  assert.equal(saved.commonPhrases[0].title, 'First');
+  assert.equal(saved.commonPhrases[1].title, 'Second');
+  assert.equal(saved.commonPhrases[2].title, 'Third');
+  assert.equal(harness.document.getElementById('undo-toast').hidden, true);
 });
 
 test('options surfaces character counters and a storage budget for phrases', async () => {

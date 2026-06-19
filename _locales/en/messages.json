@@ -38,6 +38,8 @@
   "optReset": { "message": "Reset to defaults" },
   "optResetConfirm": { "message": "Reset all settings to their defaults? Your current settings will be overwritten." },
   "optSaved": { "message": "Saved" },
+  "optRemoved": { "message": "Removed" },
+  "optUndo": { "message": "Undo" },
   "optGeneral": { "message": "General" },
   "optReplacements": { "message": "Text replacement" },
   "optReplacementsTitle": { "message": "Text replacement" },

@@ -38,6 +38,8 @@
   "optReset": { "message": "重設為預設值" },
   "optResetConfirm": { "message": "確定要將所有設定重設為預設值嗎？目前的設定會被覆蓋。" },
   "optSaved": { "message": "已儲存" },
+  "optRemoved": { "message": "已移除" },
+  "optUndo": { "message": "復原" },
   "optGeneral": { "message": "一般" },
   "optReplacements": { "message": "字串取代" },
   "optReplacementsTitle": { "message": "字串取代" },
