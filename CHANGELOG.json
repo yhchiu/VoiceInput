@@ -1,5 +1,91 @@
 [
   {
+    "version": "1.1.0",
+    "date": "2026-06-20",
+    "items": [
+      {
+        "commit": "5b12fb57a5f6eb756e3780638f79a1d27ab27eda",
+        "type": "style",
+        "subject": "style(options): top-align common phrase rows for an even layout"
+      },
+      {
+        "commit": "8a991d3857c10f34f607d2496562586acf36caaa",
+        "type": "feat",
+        "subject": "feat(options): calmer save feedback and safer autosave flushing"
+      },
+      {
+        "commit": "ef7480d2d8ad866b151b3609f13eb8c7c149fdfe",
+        "type": "feat",
+        "subject": "feat(options): append a new row with Enter from the last field"
+      },
+      {
+        "commit": "af2395483f62c3e6865126e31887aa438a70e8fc",
+        "type": "feat",
+        "subject": "feat(options): add a filter box to the rules and phrases lists"
+      },
+      {
+        "commit": "0cfed8cd23c1d41b6d71dc6163c22eccd1622aa7",
+        "type": "refactor",
+        "subject": "refactor(options): use column headers and inline affordances for list rows"
+      },
+      {
+        "commit": "390f84be151eda0cca0a1a1a29c0763e0ac65596",
+        "type": "feat",
+        "subject": "feat(options): give list rows accessible names and roles"
+      },
+      {
+        "commit": "5a16b3cedf001956af643e62547dce1d0df0c4fd",
+        "type": "feat",
+        "subject": "feat(options): flag empty and duplicate replacement keys inline"
+      },
+      {
+        "commit": "90ab9ad98e758c12f9895afe19cae8f992e657fc",
+        "type": "feat",
+        "subject": "feat(options): reorder rules and phrases with up and down controls"
+      },
+      {
+        "commit": "7098643ac98886a215c2fdc07236e5ef2eaee086",
+        "type": "feat",
+        "subject": "feat(options): allow undo after removing a rule or phrase"
+      },
+      {
+        "commit": "99d891c1e8a5387b0091d64f0e652c92d6188ce0",
+        "type": "feat",
+        "subject": "feat(options): show character and storage limits while editing"
+      },
+      {
+        "commit": "b932e73ee8ed606865d6d8a4738a4e3da7f351ab",
+        "type": "chore",
+        "subject": "chore: add privacy policy and drop redundant host_permissions"
+      },
+      {
+        "commit": "f52d91073c4666a712733b450f8882dd3c01fd0e",
+        "type": "feat",
+        "subject": "feat: add common phrases for quick text insertion"
+      },
+      {
+        "commit": "1812df6695c8759e5309a5b1091159f034b29d3b",
+        "type": "docs",
+        "subject": "docs: add testing instructions"
+      },
+      {
+        "commit": "ad78add1ce10b963bb9bf5fed756307176caf50c",
+        "type": "test",
+        "subject": "test(options): cover settings import and export compatibility"
+      },
+      {
+        "commit": "7993a5ac3c082f8a8917ae56e837c4c9bb3f0023",
+        "type": "feat",
+        "subject": "feat(sidepanel): add scratchpad storage option"
+      },
+      {
+        "commit": "e5419b543fba5fe3f664c9eac3fb9e85e6f2d733",
+        "type": "feat",
+        "subject": "feat: add unit test harness"
+      }
+    ]
+  },
+  {
     "version": "1.0.3",
     "date": "2026-05-08",
     "items": [
