@@ -38,6 +38,8 @@
   "optReset": { "message": "重置为默认值" },
   "optResetConfirm": { "message": "确定要将所有设置重置为默认值吗？目前的设置会被覆盖。" },
   "optSaved": { "message": "已保存" },
+  "optEditing": { "message": "编辑中…" },
+  "optSaving": { "message": "保存中…" },
   "optRemoved": { "message": "已移除" },
   "optUndo": { "message": "撤销" },
   "optGeneral": { "message": "常规" },

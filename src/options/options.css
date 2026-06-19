@@ -681,23 +681,22 @@ button.ghost.danger:hover {
   padding: 16px 0 18px 0;
   border-top: 1px solid var(--border);
 }
-.saved {
+/* Persistent, calm save status (no flashing toast, no motion). */
+.save-status {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-height: 18px;
   font-size: 12px;
+  font-weight: 500;
+  color: var(--text-mute);
+}
+.save-status .save-check { display: none; }
+.save-status[data-state="saved"] {
   color: var(--success);
   font-weight: 600;
-  background: rgba(22, 163, 74, 0.1);
-  padding: 5px 10px;
-  border-radius: 999px;
-  animation: pop 240ms ease;
 }
-.saved[hidden] { display: none; }
-@keyframes pop {
-  from { opacity: 0; transform: scale(0.92); }
-  to { opacity: 1; transform: scale(1); }
-}
+.save-status[data-state="saved"] .save-check { display: inline-flex; }
 
 /* Responsive */
 @media (max-width: 720px) {

@@ -7,6 +7,7 @@
     phraseText: globalThis.VI_COMMON_PHRASE_TEXT_MAX_CHARS,
     phraseBytes: globalThis.VI_COMMON_PHRASES_MAX_BYTES,
   };
+  const SAVE_DEBOUNCE_MS = 800;
   const TRASH_ICON_SVG = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>';
   const CHANGELOG_FILE = 'CHANGELOG.json';
   const CHANGELOG_REPO_URL = 'https://github.com/yhchiu/VoiceInput';
@@ -289,7 +290,12 @@
 
   function scheduleReplacementSave() {
     if (replacementSaveTimer) clearTimeout(replacementSaveTimer);
-    replacementSaveTimer = setTimeout(saveReplacementsNow, 450);
+    replacementSaveTimer = setTimeout(saveReplacementsNow, SAVE_DEBOUNCE_MS);
+    setSaveStatus('editing');
+  }
+
+  function flushReplacementSave() {
+    if (replacementSaveTimer) saveReplacementsNow();
   }
 
   function removeReplacementRow(row) {
@@ -342,6 +348,8 @@
     to.input.addEventListener('input', onReplacementInput);
     from.input.addEventListener('keydown', onReplacementKeydown);
     to.input.addEventListener('keydown', onReplacementKeydown);
+    from.input.addEventListener('blur', flushReplacementSave);
+    to.input.addEventListener('blur', flushReplacementSave);
 
     row.setAttribute('role', 'listitem');
     row.appendChild(from.wrap);
@@ -433,7 +441,12 @@
 
   function scheduleCommonPhraseSave() {
     if (commonPhraseSaveTimer) clearTimeout(commonPhraseSaveTimer);
-    commonPhraseSaveTimer = setTimeout(saveCommonPhrasesNow, 450);
+    commonPhraseSaveTimer = setTimeout(saveCommonPhrasesNow, SAVE_DEBOUNCE_MS);
+    setSaveStatus('editing');
+  }
+
+  function flushCommonPhraseSave() {
+    if (commonPhraseSaveTimer) saveCommonPhrasesNow();
   }
 
   function removeCommonPhraseRow(row) {
@@ -475,6 +488,8 @@
     };
     title.input.addEventListener('input', onPhraseInput);
     text.input.addEventListener('input', onPhraseInput);
+    title.input.addEventListener('blur', flushCommonPhraseSave);
+    text.input.addEventListener('blur', flushCommonPhraseSave);
     title.input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && isLastRow(row, '.common-phrase-row')) {
         e.preventDefault();
@@ -752,7 +767,7 @@
       await globalThis.viReplaceSettings(payload.settings);
       const shortcutResult = await restoreShortcuts(payload.shortcuts);
       await load();
-      showSaved();
+      setSaveStatus('saved');
 
       const shortcutList = formatShortcutList(payload.shortcuts);
       if (shortcutResult.unsupported) {
@@ -800,17 +815,21 @@
     renderCommonPhrases(s.commonPhrases);
   }
 
-  let savedTimer = null;
-  function showSaved() {
+  const SAVE_STATUS_LABELS = { editing: 'optEditing', saving: 'optSaving', saved: 'optSaved' };
+  function setSaveStatus(state) {
     const el = document.getElementById('saved');
-    el.hidden = false;
-    if (savedTimer) clearTimeout(savedTimer);
-    savedTimer = setTimeout(() => { el.hidden = true; }, 1500);
+    const text = document.getElementById('saved-text');
+    if (!el || !text) return;
+    el.setAttribute('data-state', state);
+    text.textContent = SAVE_STATUS_LABELS[state] ? t(SAVE_STATUS_LABELS[state]) : '';
   }
 
   async function save(partial) {
+    setSaveStatus('saving');
     await globalThis.viSetSettings(partial);
-    showSaved();
+    // If the user kept typing while the write was in flight, stay in the
+    // editing state instead of falsely reporting everything as saved.
+    setSaveStatus(replacementSaveTimer || commonPhraseSaveTimer ? 'editing' : 'saved');
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -844,6 +863,15 @@
     document.getElementById('add-replacement').addEventListener('click', addReplacementRow);
     document.getElementById('add-common-phrase').addEventListener('click', addCommonPhraseRow);
     document.getElementById('undo-action').addEventListener('click', runPendingUndo);
+
+    // Safety net: flush any pending debounced edit before the page goes away.
+    const flushPendingSaves = () => { flushReplacementSave(); flushCommonPhraseSave(); };
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) flushPendingSaves();
+    });
+    if (typeof window !== 'undefined' && window.addEventListener) {
+      window.addEventListener('pagehide', flushPendingSaves);
+    }
     document.getElementById('export-settings').addEventListener('click', exportSettings);
     document.getElementById('import-settings').addEventListener('click', () => {
       const input = document.getElementById('import-settings-file');
@@ -861,7 +889,7 @@
       if (!confirm(t('optResetConfirm'))) return;
       await globalThis.viResetSettings();
       await load();
-      showSaved();
+      setSaveStatus('saved');
     });
   });
 })();

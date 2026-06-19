@@ -311,6 +311,7 @@ function primeOptionsDom(document) {
     'open-shortcuts',
     'reset',
     'saved',
+    'saved-text',
   ].forEach((id) => document.getElementById(id));
 }
 
@@ -733,6 +734,44 @@ test('options applies replacement limits via maxlength and counters', async () =
   const counters = row.querySelectorAll('.field-counter');
   assert.equal(counters[0].textContent, '1/200');
   assert.equal(counters[1].textContent, '1/500');
+});
+
+test('options reports a calm three-state save status', async () => {
+  const harness = await bootOptionsPage({
+    initialSettings: { replacements: [{ from: 'a', to: '1' }] },
+  });
+
+  const status = harness.document.getElementById('saved');
+  const statusText = harness.document.getElementById('saved-text');
+  const to = harness.document.querySelectorAll('.replacement-row')[0].querySelector('.replacement-to');
+
+  to.value = '2';
+  await to.dispatch('input');
+  assert.equal(status.getAttribute('data-state'), 'editing');
+  assert.equal(statusText.textContent, 'optEditing');
+
+  // Run the debounced save.
+  await harness.timers[harness.timers.length - 1].callback();
+  await flushAsync();
+  assert.equal(status.getAttribute('data-state'), 'saved');
+  assert.equal(statusText.textContent, 'optSaved');
+});
+
+test('options flushes a pending edit immediately on blur', async () => {
+  const harness = await bootOptionsPage({
+    initialSettings: { replacements: [{ from: 'a', to: '1' }] },
+  });
+
+  const to = harness.document.querySelectorAll('.replacement-row')[0].querySelector('.replacement-to');
+  to.value = '2';
+  await to.dispatch('input');
+
+  // Without running the debounce timer, leaving the field saves immediately.
+  await to.dispatch('blur');
+  await flushAsync();
+
+  const saved = harness.storage.syncData[SETTINGS_KEY];
+  assert.equal(saved.replacements[0].to, '2');
 });
 
 test('options appends a row when pressing Enter in the last row only', async () => {
