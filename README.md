@@ -81,6 +81,8 @@ Settings are saved in `chrome.storage.sync` and may sync through your Chrome pro
 
 Common phrases are saved as settings. Scratchpad text is saved only if you enable scratchpad saving.
 
+See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0.

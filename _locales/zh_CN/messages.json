@@ -82,6 +82,7 @@
   "optAboutIssuesLink": { "message": "打开 GitHub Issues" },
   "optAboutPrivacy": { "message": "隐私声明" },
   "optAboutPrivacyText": { "message": "VoiceInput 不通过自有服务器收集或传送你的语音、识别文字或网页内容。设置数据只储存在 Chrome storage。常用字词会作为设置保存，并可能通过 Chrome 同步。为了在 popup 显示最近识别结果，最后一笔识别文字会暂存在 Chrome session storage，浏览器会话结束后清除。若启用暂存输入区保存，该文字会按你选择的选项存在 Chrome local 或 sync storage；sync storage 可能由 Chrome 同步到你的其他设备。语音识别由浏览器的 Web Speech API 处理，可能受浏览器或操作系统服务条款与隐私政策约束。" },
+  "optAboutPrivacyPolicyLink": { "message": "阅读完整隐私政策" },
   "optAboutLicense": { "message": "License" },
   "optAdvanced": { "message": "高级" },
   "optShortcutsTitle": { "message": "键盘快捷键" },

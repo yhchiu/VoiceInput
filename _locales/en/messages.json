@@ -82,6 +82,7 @@
   "optAboutIssuesLink": { "message": "Open GitHub Issues" },
   "optAboutPrivacy": { "message": "Privacy statement" },
   "optAboutPrivacyText": { "message": "VoiceInput does not collect or send your voice, recognized text, or page content through its own servers. Settings are stored only in Chrome storage. Common phrases are saved as settings and may sync through Chrome. To show the recent recognition result in the popup, the last recognized text is temporarily kept in Chrome session storage and cleared when the browser session ends. If scratchpad saving is enabled, scratchpad text is stored in Chrome local or sync storage according to your selected option; sync storage may be synced by Chrome to your other devices. Speech recognition is handled by the browser Web Speech API and may be subject to your browser or operating system service terms and privacy policy." },
+  "optAboutPrivacyPolicyLink": { "message": "Read the full privacy policy" },
   "optAboutLicense": { "message": "License" },
   "optAdvanced": { "message": "Advanced" },
   "optShortcutsTitle": { "message": "Keyboard shortcut" },

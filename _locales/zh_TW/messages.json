@@ -82,6 +82,7 @@
   "optAboutIssuesLink": { "message": "開啟 GitHub Issues" },
   "optAboutPrivacy": { "message": "隱私聲明" },
   "optAboutPrivacyText": { "message": "VoiceInput 不經由自有伺服器收集或傳送你的語音、辨識文字或網頁內容。設定資料只儲存在 Chrome storage。常用字詞會作為設定保存，並可能透過 Chrome 同步。為了在 popup 顯示最近辨識結果，最後一筆辨識文字會暫存在 Chrome session storage，瀏覽器工作階段結束後清除。若啟用暫存輸入區保存，該文字會依你選擇的選項存在 Chrome local 或 sync storage；sync storage 可能由 Chrome 同步到你的其他裝置。語音辨識由瀏覽器的 Web Speech API 處理，可能受瀏覽器或作業系統服務條款與隱私政策約束。" },
+  "optAboutPrivacyPolicyLink": { "message": "閱讀完整隱私政策" },
   "optAboutLicense": { "message": "License" },
   "optAdvanced": { "message": "進階" },
   "optShortcutsTitle": { "message": "鍵盤快捷鍵" },
