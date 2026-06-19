@@ -42,6 +42,7 @@
   "optSaving": { "message": "Saving…" },
   "optRemoved": { "message": "Removed" },
   "optUndo": { "message": "Undo" },
+  "optSettingsSection": { "message": "Settings section" },
   "optGeneral": { "message": "General" },
   "optReplacements": { "message": "Text replacement" },
   "optReplacementsTitle": { "message": "Text replacement" },

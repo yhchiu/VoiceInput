@@ -280,6 +280,34 @@ function makeChromeStorage(initialSettings = {}) {
 }
 
 function primeOptionsDom(document) {
+  const tabs = [
+    'general',
+    'advanced',
+    'replacements',
+    'common-phrases',
+    'settings-management',
+    'changelog',
+    'about',
+  ];
+  const nav = document.createElement('nav');
+  nav.className = 'sidebar';
+  tabs.forEach((tab, index) => {
+    const button = document.createElement('button');
+    button.className = index === 0 ? 'nav-item is-active' : 'nav-item';
+    button.setAttribute('data-tab', tab);
+    button.setAttribute('aria-selected', index === 0 ? 'true' : 'false');
+    nav.appendChild(button);
+  });
+  document.body.appendChild(nav);
+
+  tabs.forEach((tab, index) => {
+    const pane = document.createElement('section');
+    pane.className = index === 0 ? 'tab-pane is-active' : 'tab-pane';
+    pane.setAttribute('data-tab', tab);
+    pane.hidden = index !== 0;
+    document.body.appendChild(pane);
+  });
+
   [
     'about-version',
     'changelog',
@@ -299,6 +327,7 @@ function primeOptionsDom(document) {
     'sidePanelMode',
     'continuous',
     'interimResults',
+    'section-select',
     'add-replacement',
     'add-common-phrase',
     'undo-toast',
@@ -438,6 +467,31 @@ async function importSettingsFile(harness, value) {
   });
   await flushAsync();
 }
+
+test('options syncs the mobile section select with desktop tabs', async () => {
+  const harness = await bootOptionsPage();
+  const select = harness.document.getElementById('section-select');
+  const navItems = harness.document.querySelectorAll('.nav-item');
+  const panes = harness.document.querySelectorAll('.tab-pane');
+  const findByTab = (items, tab) => items.find((item) => item.dataset.tab === tab);
+
+  assert.equal(select.value, 'general');
+
+  select.value = 'common-phrases';
+  await select.dispatch('change');
+
+  assert.equal(findByTab(navItems, 'common-phrases').classList.contains('is-active'), true);
+  assert.equal(findByTab(navItems, 'common-phrases').getAttribute('aria-selected'), 'true');
+  assert.equal(findByTab(panes, 'common-phrases').hidden, false);
+  assert.equal(findByTab(panes, 'general').hidden, true);
+
+  await findByTab(navItems, 'advanced').click();
+
+  assert.equal(select.value, 'advanced');
+  assert.equal(findByTab(navItems, 'advanced').classList.contains('is-active'), true);
+  assert.equal(findByTab(panes, 'advanced').hidden, false);
+  assert.equal(findByTab(panes, 'common-phrases').hidden, true);
+});
 
 test('settings management helpers create and parse compatible payloads', () => {
   const context = loadClassicScript('src/common/settings.js', {

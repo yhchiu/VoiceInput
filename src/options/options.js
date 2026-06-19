@@ -783,24 +783,46 @@
   }
 
   function setupTabs() {
-    const navItems = document.querySelectorAll('.nav-item');
-    const panes = document.querySelectorAll('.tab-pane');
+    const navItems = Array.from(document.querySelectorAll('.nav-item'));
+    const panes = Array.from(document.querySelectorAll('.tab-pane'));
+    const sectionSelect = document.getElementById('section-select');
+
+    function activateTab(target) {
+      if (!target || !panes.some((pane) => pane.dataset.tab === target)) return;
+      navItems.forEach((btn) => {
+        const active = btn.dataset.tab === target;
+        btn.classList.toggle('is-active', active);
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      panes.forEach((pane) => {
+        const active = pane.dataset.tab === target;
+        pane.classList.toggle('is-active', active);
+        pane.hidden = !active;
+      });
+      if (sectionSelect && sectionSelect.value !== target) {
+        sectionSelect.value = target;
+      }
+      clearSettingsManagementStatus();
+    }
+
     navItems.forEach((btn) => {
       btn.addEventListener('click', () => {
-        const target = btn.dataset.tab;
-        clearSettingsManagementStatus();
-        navItems.forEach((b) => {
-          const active = b === btn;
-          b.classList.toggle('is-active', active);
-          b.setAttribute('aria-selected', active ? 'true' : 'false');
-        });
-        panes.forEach((p) => {
-          const match = p.dataset.tab === target;
-          p.classList.toggle('is-active', match);
-          p.hidden = !match;
-        });
+        activateTab(btn.dataset.tab);
       });
     });
+    if (sectionSelect) {
+      const activeTab = (
+        navItems.find((btn) => btn.classList.contains('is-active'))
+        || panes.find((pane) => pane.classList.contains('is-active'))
+        || panes[0]
+      );
+      if (activeTab && activeTab.dataset.tab) {
+        sectionSelect.value = activeTab.dataset.tab;
+      }
+      sectionSelect.addEventListener('change', (e) => {
+        activateTab(e.target.value);
+      });
+    }
   }
 
   async function load() {

@@ -35,6 +35,7 @@ body {
 }
 
 .app {
+  width: 100%;
   max-width: 880px;
   margin: 32px auto;
   padding: 0 20px;
@@ -131,8 +132,20 @@ body {
   flex-shrink: 0;
 }
 
+.section-switcher {
+  display: none;
+}
+.section-switcher label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-mute);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 /* Panel */
 .panel {
+  min-width: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -166,7 +179,8 @@ body {
   margin-bottom: 8px;
 }
 .field input[type="number"],
-.field select {
+.field select,
+.section-switcher select {
   width: 100%;
   padding: 9px 12px;
   border: 1px solid var(--border-strong);
@@ -179,16 +193,19 @@ body {
   appearance: none;
   -webkit-appearance: none;
 }
-.field select {
+.field select,
+.section-switcher select {
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='1 1.5 6 6.5 11 1.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 32px;
 }
 .field input[type="number"]:hover,
-.field select:hover { border-color: #94a3b8; }
+.field select:hover,
+.section-switcher select:hover { border-color: #94a3b8; }
 .field input[type="number"]:focus,
-.field select:focus {
+.field select:focus,
+.section-switcher select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-ring);
 }
@@ -703,15 +720,39 @@ button.ghost.danger:hover {
 
 /* Responsive */
 @media (max-width: 720px) {
-  .layout { grid-template-columns: 1fr; }
-  .sidebar {
-    position: static;
-    flex-direction: row;
-    overflow-x: auto;
+  .app {
+    margin: 20px auto;
+    padding: 0 14px;
   }
-  .nav-item.is-bottom { margin-top: 0; }
-  .nav-item { flex: 1 0 auto; justify-content: center; }
-  .panel { padding: 8px 18px; }
+  .topbar {
+    margin-bottom: 14px;
+  }
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .sidebar {
+    display: none;
+  }
+  .section-switcher {
+    display: block;
+  }
+  .panel {
+    min-height: 0;
+    padding: 8px 18px;
+  }
+  .toggle-row {
+    align-items: flex-start;
+  }
+  .row-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  button.ghost {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
   .replacement-row {
     grid-template-columns: 1fr;
     align-items: stretch;
@@ -746,5 +787,72 @@ button.ghost.danger:hover {
   }
   .changelog-item {
     gap: 2px;
+  }
+  .undo-toast {
+    left: 14px;
+    right: 14px;
+    bottom: 16px;
+    transform: none;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 480px) {
+  .app {
+    margin: 14px auto;
+    padding: 0 10px;
+  }
+  .brand {
+    gap: 10px;
+    min-width: 0;
+  }
+  .brand-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+  }
+  .brand h1 {
+    min-width: 0;
+    font-size: 16px;
+    overflow-wrap: anywhere;
+  }
+  .section-switcher select,
+  .field input[type="number"],
+  .field select {
+    min-height: 40px;
+  }
+  .panel {
+    padding: 4px 14px;
+    border-radius: 10px;
+  }
+  .tab-pane {
+    padding-top: 16px;
+  }
+  .field {
+    padding: 12px 0;
+  }
+  .replacement-list,
+  .common-phrase-list {
+    gap: 8px;
+  }
+  .replacement-row,
+  .common-phrase-row {
+    gap: 8px;
+    padding: 10px;
+  }
+  .row-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .icon-btn {
+    min-width: 0;
+    padding: 8px;
+  }
+  .field > button.ghost {
+    width: 100%;
+  }
+  .actions {
+    justify-content: flex-start;
+    padding-bottom: 14px;
   }
 }

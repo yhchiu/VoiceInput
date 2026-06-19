@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="options.css">
     <title>Voice Input — Settings</title>
   </head>
@@ -94,6 +95,19 @@
             <span data-i18n="optAbout"></span>
           </button>
         </nav>
+
+        <div class="section-switcher">
+          <label for="section-select" data-i18n="optSettingsSection"></label>
+          <select id="section-select">
+            <option value="general" data-i18n="optGeneral"></option>
+            <option value="advanced" data-i18n="optAdvanced"></option>
+            <option value="replacements" data-i18n="optReplacements"></option>
+            <option value="common-phrases" data-i18n="optCommonPhrases"></option>
+            <option value="settings-management" data-i18n="optSettingsManagement"></option>
+            <option value="changelog" data-i18n="optChangelog"></option>
+            <option value="about" data-i18n="optAbout"></option>
+          </select>
+        </div>
 
         <main class="panel">
           <section class="tab-pane is-active" data-tab="general" role="tabpanel">

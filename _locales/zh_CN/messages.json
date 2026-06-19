@@ -42,6 +42,7 @@
   "optSaving": { "message": "保存中…" },
   "optRemoved": { "message": "已移除" },
   "optUndo": { "message": "撤销" },
+  "optSettingsSection": { "message": "设置分类" },
   "optGeneral": { "message": "常规" },
   "optReplacements": { "message": "字符串替换" },
   "optReplacementsTitle": { "message": "字符串替换" },
