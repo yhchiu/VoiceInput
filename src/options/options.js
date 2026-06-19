@@ -129,11 +129,45 @@
     });
   }
 
+  function filterRows(selector, query, getText, noMatchId) {
+    const q = (query || '').trim().toLowerCase();
+    const rows = Array.from(document.querySelectorAll(selector));
+    let visible = 0;
+    rows.forEach((row) => {
+      const match = q === '' || getText(row).toLowerCase().includes(q);
+      row.hidden = !match;
+      if (match) visible += 1;
+    });
+    const noMatch = document.getElementById(noMatchId);
+    if (noMatch) noMatch.hidden = !(q !== '' && rows.length > 0 && visible === 0);
+  }
+
+  function applyReplacementFilter() {
+    const input = document.getElementById('replacements-filter');
+    filterRows(
+      '.replacement-row',
+      input ? input.value : '',
+      (row) => `${row.querySelector('.replacement-from').value} ${row.querySelector('.replacement-to').value}`,
+      'replacements-no-match',
+    );
+  }
+
+  function applyCommonPhraseFilter() {
+    const input = document.getElementById('common-phrases-filter');
+    filterRows(
+      '.common-phrase-row',
+      input ? input.value : '',
+      (row) => `${row.querySelector('.common-phrase-title').value} ${row.querySelector('.common-phrase-text').value}`,
+      'common-phrases-no-match',
+    );
+  }
+
   function updateReplacementEmptyState() {
     const empty = document.getElementById('replacements-empty');
     empty.hidden = document.querySelectorAll('.replacement-row').length > 0;
     updateMoveButtonStates('.replacement-row');
     validateReplacements();
+    applyReplacementFilter();
   }
 
   let undoTimer = null;
@@ -343,6 +377,7 @@
     const empty = document.getElementById('common-phrases-empty');
     empty.hidden = document.querySelectorAll('.common-phrase-row').length > 0;
     updateMoveButtonStates('.common-phrase-row');
+    applyCommonPhraseFilter();
   }
 
   function updateCommonPhraseBudget() {
@@ -768,8 +803,21 @@
     document.getElementById('sidePanelMode').addEventListener('change', (e) => save({ sidePanelMode: e.target.checked }));
     document.getElementById('continuous').addEventListener('change', (e) => save({ continuous: e.target.checked }));
     document.getElementById('interimResults').addEventListener('change', (e) => save({ interimResults: e.target.checked }));
-    document.getElementById('add-replacement').addEventListener('click', () => appendReplacementRow({}, true));
-    document.getElementById('add-common-phrase').addEventListener('click', () => appendCommonPhraseRow({}, true));
+    const replacementsFilter = document.getElementById('replacements-filter');
+    replacementsFilter.placeholder = t('optFilterPlaceholder');
+    replacementsFilter.addEventListener('input', applyReplacementFilter);
+    const commonPhrasesFilter = document.getElementById('common-phrases-filter');
+    commonPhrasesFilter.placeholder = t('optFilterPlaceholder');
+    commonPhrasesFilter.addEventListener('input', applyCommonPhraseFilter);
+
+    document.getElementById('add-replacement').addEventListener('click', () => {
+      replacementsFilter.value = '';
+      appendReplacementRow({}, true);
+    });
+    document.getElementById('add-common-phrase').addEventListener('click', () => {
+      commonPhrasesFilter.value = '';
+      appendCommonPhraseRow({}, true);
+    });
     document.getElementById('undo-action').addEventListener('click', runPendingUndo);
     document.getElementById('export-settings').addEventListener('click', exportSettings);
     document.getElementById('import-settings').addEventListener('click', () => {

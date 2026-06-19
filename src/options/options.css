@@ -424,6 +424,24 @@ button.ghost.danger:hover {
   color: var(--text-mute);
   font-size: 15px;
 }
+/* Filter box above each list */
+.list-filter {
+  width: 100%;
+  margin: 12px 0 0 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  background: #fff;
+  color: var(--text);
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.list-filter:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
 /* Column header above each list */
 .list-header {
   display: grid;

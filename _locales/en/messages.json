@@ -66,6 +66,8 @@
   "optRemoveCommonPhrase": { "message": "Remove" },
   "optMoveUp": { "message": "Move up" },
   "optMoveDown": { "message": "Move down" },
+  "optFilterPlaceholder": { "message": "Filter…" },
+  "optFilterNoMatch": { "message": "No entries match the filter." },
   "optPhraseBudget": { "message": "Storage used:" },
   "optSettingsManagement": { "message": "Settings management" },
   "optExportSettingsTitle": { "message": "Export settings" },

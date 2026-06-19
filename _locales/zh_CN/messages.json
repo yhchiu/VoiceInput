@@ -66,6 +66,8 @@
   "optRemoveCommonPhrase": { "message": "移除" },
   "optMoveUp": { "message": "上移" },
   "optMoveDown": { "message": "下移" },
+  "optFilterPlaceholder": { "message": "筛选…" },
+  "optFilterNoMatch": { "message": "没有符合筛选条件的项目。" },
   "optPhraseBudget": { "message": "已使用空间：" },
   "optSettingsManagement": { "message": "设置管理" },
   "optExportSettingsTitle": { "message": "设置导出" },

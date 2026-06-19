@@ -286,6 +286,10 @@ function primeOptionsDom(document) {
     'changelog-empty',
     'replacements',
     'replacements-empty',
+    'replacements-filter',
+    'replacements-no-match',
+    'common-phrases-filter',
+    'common-phrases-no-match',
     'common-phrases',
     'common-phrases-empty',
     'common-phrases-budget',
@@ -729,6 +733,39 @@ test('options applies replacement limits via maxlength and counters', async () =
   const counters = row.querySelectorAll('.field-counter');
   assert.equal(counters[0].textContent, '1/200');
   assert.equal(counters[1].textContent, '1/500');
+});
+
+test('options filters rules without changing the saved set', async () => {
+  const harness = await bootOptionsPage({
+    initialSettings: {
+      replacements: [
+        { from: 'apple', to: '1' },
+        { from: 'banana', to: '2' },
+      ],
+    },
+  });
+
+  const rows = harness.document.querySelectorAll('.replacement-row');
+  const filter = harness.document.getElementById('replacements-filter');
+
+  filter.value = 'ban';
+  await filter.dispatch('input');
+  assert.equal(rows[0].hidden, true);
+  assert.equal(rows[1].hidden, false);
+
+  filter.value = 'zzz';
+  await filter.dispatch('input');
+  assert.equal(harness.document.getElementById('replacements-no-match').hidden, false);
+
+  filter.value = '';
+  await filter.dispatch('input');
+  assert.equal(rows[0].hidden, false);
+  assert.equal(rows[1].hidden, false);
+  assert.equal(harness.document.getElementById('replacements-no-match').hidden, true);
+
+  // Filtering is presentational: the stored rules are untouched.
+  const saved = harness.storage.syncData[SETTINGS_KEY];
+  assert.equal(saved.replacements.length, 2);
 });
 
 test('options rows expose example placeholders and a direction affordance', async () => {

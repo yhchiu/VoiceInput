@@ -123,6 +123,7 @@
             <div class="field">
               <label data-i18n="optReplacementsTitle"></label>
               <p class="hint" data-i18n="optReplacementsHint"></p>
+              <input id="replacements-filter" class="list-filter" type="text" autocomplete="off" />
               <div class="list-header replacement-header" aria-hidden="true">
                 <span data-i18n="optReplaceFrom"></span>
                 <span></span>
@@ -130,6 +131,7 @@
               </div>
               <div id="replacements" class="replacement-list" role="list"></div>
               <p id="replacements-empty" class="empty-state" data-i18n="optReplacementsEmpty"></p>
+              <p id="replacements-no-match" class="empty-state" data-i18n="optFilterNoMatch" hidden></p>
               <button id="add-replacement" class="ghost" data-i18n="optAddReplacement"></button>
             </div>
           </section>
@@ -139,12 +141,14 @@
               <label data-i18n="optCommonPhrasesTitle"></label>
               <p class="hint" data-i18n="optCommonPhrasesHint"></p>
               <p id="common-phrases-budget" class="budget-meter"></p>
+              <input id="common-phrases-filter" class="list-filter" type="text" autocomplete="off" />
               <div class="list-header common-phrase-header" aria-hidden="true">
                 <span data-i18n="optCommonPhraseTitle"></span>
                 <span data-i18n="optCommonPhraseText"></span>
               </div>
               <div id="common-phrases" class="common-phrase-list" role="list"></div>
               <p id="common-phrases-empty" class="empty-state" data-i18n="optCommonPhrasesEmpty"></p>
+              <p id="common-phrases-no-match" class="empty-state" data-i18n="optFilterNoMatch" hidden></p>
               <button id="add-common-phrase" class="ghost" data-i18n="optAddCommonPhrase"></button>
             </div>
           </section>
