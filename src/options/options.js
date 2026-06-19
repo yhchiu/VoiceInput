@@ -224,6 +224,11 @@
     return true;
   }
 
+  function isLastRow(row, selector) {
+    const rows = Array.from(document.querySelectorAll(selector));
+    return rows.length > 0 && rows[rows.length - 1] === row;
+  }
+
   function updateMoveButtonStates(selector) {
     const rows = Array.from(document.querySelectorAll(selector));
     rows.forEach((row, i) => {
@@ -327,8 +332,16 @@
       validateReplacements();
       setReplacementAriaLabels(row);
     };
+    const onReplacementKeydown = (e) => {
+      if (e.key === 'Enter' && isLastRow(row, '.replacement-row')) {
+        e.preventDefault();
+        addReplacementRow();
+      }
+    };
     from.input.addEventListener('input', onReplacementInput);
     to.input.addEventListener('input', onReplacementInput);
+    from.input.addEventListener('keydown', onReplacementKeydown);
+    to.input.addEventListener('keydown', onReplacementKeydown);
 
     row.setAttribute('role', 'listitem');
     row.appendChild(from.wrap);
@@ -340,6 +353,12 @@
     updateReplacementEmptyState();
     if (focus) from.input.focus();
     return row;
+  }
+
+  function addReplacementRow() {
+    const filter = document.getElementById('replacements-filter');
+    if (filter) filter.value = '';
+    appendReplacementRow({}, true);
   }
 
   function renderReplacements(replacements) {
@@ -456,6 +475,12 @@
     };
     title.input.addEventListener('input', onPhraseInput);
     text.input.addEventListener('input', onPhraseInput);
+    title.input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && isLastRow(row, '.common-phrase-row')) {
+        e.preventDefault();
+        addCommonPhraseRow();
+      }
+    });
 
     row.setAttribute('role', 'listitem');
     row.appendChild(title.wrap);
@@ -467,6 +492,12 @@
     updateCommonPhraseBudget();
     if (focus) title.input.focus();
     return row;
+  }
+
+  function addCommonPhraseRow() {
+    const filter = document.getElementById('common-phrases-filter');
+    if (filter) filter.value = '';
+    appendCommonPhraseRow({}, true);
   }
 
   function renderCommonPhrases(commonPhrases) {
@@ -810,14 +841,8 @@
     commonPhrasesFilter.placeholder = t('optFilterPlaceholder');
     commonPhrasesFilter.addEventListener('input', applyCommonPhraseFilter);
 
-    document.getElementById('add-replacement').addEventListener('click', () => {
-      replacementsFilter.value = '';
-      appendReplacementRow({}, true);
-    });
-    document.getElementById('add-common-phrase').addEventListener('click', () => {
-      commonPhrasesFilter.value = '';
-      appendCommonPhraseRow({}, true);
-    });
+    document.getElementById('add-replacement').addEventListener('click', addReplacementRow);
+    document.getElementById('add-common-phrase').addEventListener('click', addCommonPhraseRow);
     document.getElementById('undo-action').addEventListener('click', runPendingUndo);
     document.getElementById('export-settings').addEventListener('click', exportSettings);
     document.getElementById('import-settings').addEventListener('click', () => {

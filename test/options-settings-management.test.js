@@ -735,6 +735,28 @@ test('options applies replacement limits via maxlength and counters', async () =
   assert.equal(counters[1].textContent, '1/500');
 });
 
+test('options appends a row when pressing Enter in the last row only', async () => {
+  const harness = await bootOptionsPage({
+    initialSettings: {
+      replacements: [
+        { from: 'a', to: '1' },
+        { from: 'b', to: '2' },
+      ],
+    },
+  });
+
+  let rows = harness.document.querySelectorAll('.replacement-row');
+  assert.equal(rows.length, 2);
+
+  await rows[0].querySelector('.replacement-from').dispatch('keydown', { key: 'Enter' });
+  rows = harness.document.querySelectorAll('.replacement-row');
+  assert.equal(rows.length, 2);
+
+  await rows[1].querySelector('.replacement-to').dispatch('keydown', { key: 'Enter' });
+  rows = harness.document.querySelectorAll('.replacement-row');
+  assert.equal(rows.length, 3);
+});
+
 test('options filters rules without changing the saved set', async () => {
   const harness = await bootOptionsPage({
     initialSettings: {
