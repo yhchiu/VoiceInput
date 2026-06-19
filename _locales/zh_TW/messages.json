@@ -55,6 +55,7 @@
   "optCommonPhraseTitle": { "message": "標題" },
   "optCommonPhraseText": { "message": "要插入的文字" },
   "optRemoveCommonPhrase": { "message": "移除" },
+  "optPhraseBudget": { "message": "已使用空間：" },
   "optSettingsManagement": { "message": "設定管理" },
   "optExportSettingsTitle": { "message": "設定匯出" },
   "optExportSettingsHint": { "message": "匯出 JSON 設定檔，內容包含目前設定與快捷鍵資訊。" },

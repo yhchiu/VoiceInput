@@ -17,6 +17,9 @@
   const COMMON_PHRASE_TITLE_MAX_CHARS = 80;
   const COMMON_PHRASE_TEXT_MAX_CHARS = 1000;
   const COMMON_PHRASES_MAX_BYTES = 5000;
+  const REPLACEMENTS_MAX_ITEMS = 50;
+  const REPLACEMENT_FROM_MAX_CHARS = 200;
+  const REPLACEMENT_TO_MAX_CHARS = 500;
 
   const DEFAULTS = Object.freeze({
     maxAlternatives: 3,
@@ -36,8 +39,8 @@
     const to = typeof item.to === 'string' ? item.to : '';
     if (from.length === 0) return null;
     return {
-      from: from.slice(0, 200),
-      to: to.slice(0, 500),
+      from: from.slice(0, REPLACEMENT_FROM_MAX_CHARS),
+      to: to.slice(0, REPLACEMENT_TO_MAX_CHARS),
     };
   }
 
@@ -48,7 +51,7 @@
       const normalized = normalizeReplacementEntry(item);
       if (normalized) out.push(normalized);
     });
-    return out.slice(0, 50);
+    return out.slice(0, REPLACEMENTS_MAX_ITEMS);
   }
 
   function truncateCodePoints(text, maxChars) {
@@ -369,6 +372,13 @@
   globalThis.VI_SCRATCHPAD_STORAGE_KEY = SCRATCHPAD_STORAGE_KEY;
   globalThis.VI_SCRATCHPAD_STORAGE_MODES = SCRATCHPAD_STORAGE_MODES;
   globalThis.VI_DEFAULT_SETTINGS = DEFAULTS;
+  globalThis.VI_REPLACEMENTS_MAX_ITEMS = REPLACEMENTS_MAX_ITEMS;
+  globalThis.VI_REPLACEMENT_FROM_MAX_CHARS = REPLACEMENT_FROM_MAX_CHARS;
+  globalThis.VI_REPLACEMENT_TO_MAX_CHARS = REPLACEMENT_TO_MAX_CHARS;
+  globalThis.VI_COMMON_PHRASES_MAX_ITEMS = COMMON_PHRASES_MAX_ITEMS;
+  globalThis.VI_COMMON_PHRASE_TITLE_MAX_CHARS = COMMON_PHRASE_TITLE_MAX_CHARS;
+  globalThis.VI_COMMON_PHRASE_TEXT_MAX_CHARS = COMMON_PHRASE_TEXT_MAX_CHARS;
+  globalThis.VI_COMMON_PHRASES_MAX_BYTES = COMMON_PHRASES_MAX_BYTES;
   globalThis.viNormalizeReplacements = normalizeReplacements;
   globalThis.viNormalizeCommonPhrases = normalizeCommonPhrases;
   globalThis.viNormalizeShortcut = normalizeShortcut;

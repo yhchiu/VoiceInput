@@ -290,6 +290,35 @@ button.ghost.danger:hover {
   background: #fef2f2;
 }
 
+/* Field character counters */
+.field-counter {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--text-mute);
+}
+.field-counter.is-warning {
+  color: #b45309;
+  font-weight: 600;
+}
+
+/* Common-phrase storage budget meter */
+.budget-meter {
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-mute);
+}
+.budget-meter.is-warning {
+  color: #b45309;
+}
+.budget-meter.is-over {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
 /* Replacement rules */
 .replacement-list {
   display: flex;

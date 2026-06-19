@@ -266,6 +266,7 @@ function primeOptionsDom(document) {
     'replacements-empty',
     'common-phrases',
     'common-phrases-empty',
+    'common-phrases-budget',
     'maxAlternatives',
     'lang',
     'autoInsertIfSingle',
@@ -626,6 +627,50 @@ test('options common phrase rows load, edit, and remove saved phrases', async ()
   rows = harness.document.querySelectorAll('.common-phrase-row');
   assert.equal(rows.length, 0);
   assert.equal(harness.document.getElementById('common-phrases-empty').hidden, false);
+});
+
+test('options surfaces character counters and a storage budget for phrases', async () => {
+  const harness = await bootOptionsPage({
+    initialSettings: {
+      commonPhrases: [{ title: 'Hi', text: 'Hello' }],
+    },
+  });
+
+  const row = harness.document.querySelectorAll('.common-phrase-row')[0];
+  const counters = row.querySelectorAll('.field-counter');
+  assert.equal(counters[0].textContent, '2/80');
+  assert.equal(counters[1].textContent, '5/1000');
+
+  const budget = harness.document.getElementById('common-phrases-budget');
+  assert.match(budget.textContent, /7 \/ 5000 bytes/);
+
+  const text = row.querySelector('.common-phrase-text');
+  text.value = 'Hello world';
+  await text.dispatch('input');
+
+  assert.equal(row.querySelectorAll('.field-counter')[1].textContent, '11/1000');
+  assert.match(
+    harness.document.getElementById('common-phrases-budget').textContent,
+    /13 \/ 5000 bytes/,
+  );
+});
+
+test('options applies replacement limits via maxlength and counters', async () => {
+  const harness = await bootOptionsPage({
+    initialSettings: {
+      replacements: [{ from: 'a', to: 'b' }],
+    },
+  });
+
+  const row = harness.document.querySelectorAll('.replacement-row')[0];
+  const from = row.querySelector('.replacement-from');
+  const to = row.querySelector('.replacement-to');
+  assert.equal(from.maxLength, harness.context.VI_REPLACEMENT_FROM_MAX_CHARS);
+  assert.equal(to.maxLength, harness.context.VI_REPLACEMENT_TO_MAX_CHARS);
+
+  const counters = row.querySelectorAll('.field-counter');
+  assert.equal(counters[0].textContent, '1/200');
+  assert.equal(counters[1].textContent, '1/500');
 });
 
 test('options import reports partial shortcut restore failures', async () => {

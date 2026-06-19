@@ -1,5 +1,12 @@
 (function () {
   const t = globalThis.vt;
+  const LIMITS = {
+    replacementFrom: globalThis.VI_REPLACEMENT_FROM_MAX_CHARS,
+    replacementTo: globalThis.VI_REPLACEMENT_TO_MAX_CHARS,
+    phraseTitle: globalThis.VI_COMMON_PHRASE_TITLE_MAX_CHARS,
+    phraseText: globalThis.VI_COMMON_PHRASE_TEXT_MAX_CHARS,
+    phraseBytes: globalThis.VI_COMMON_PHRASES_MAX_BYTES,
+  };
   const CHANGELOG_FILE = 'CHANGELOG.json';
   const CHANGELOG_REPO_URL = 'https://github.com/yhchiu/VoiceInput';
   const RELEASE_TYPE_LABELS = {
@@ -27,7 +34,21 @@
     globalThis.viBuildLangOptions(document.getElementById('lang'), currentLang, t('optLangAuto'));
   }
 
-  function createReplacementInput(labelKey, className, value) {
+  function attachFieldCounter(wrap, input, maxLength) {
+    input.maxLength = maxLength;
+    const counter = document.createElement('span');
+    counter.className = 'field-counter';
+    const update = () => {
+      const len = input.value.length;
+      counter.textContent = `${len}/${maxLength}`;
+      counter.classList.toggle('is-warning', len >= Math.floor(maxLength * 0.9));
+    };
+    input.addEventListener('input', update);
+    update();
+    wrap.appendChild(counter);
+  }
+
+  function createReplacementInput(labelKey, className, value, maxLength) {
     const wrap = document.createElement('div');
     wrap.className = 'replacement-input';
     const label = document.createElement('label');
@@ -41,6 +62,7 @@
     input.spellcheck = false;
     input.setAttribute('aria-label', t(labelKey));
     wrap.appendChild(input);
+    attachFieldCounter(wrap, input, maxLength);
     return { wrap, input };
   }
 
@@ -76,8 +98,8 @@
     const row = document.createElement('div');
     row.className = 'replacement-row';
 
-    const from = createReplacementInput('optReplaceFrom', 'replacement-from', item.from);
-    const to = createReplacementInput('optReplaceTo', 'replacement-to', item.to);
+    const from = createReplacementInput('optReplaceFrom', 'replacement-from', item.from, LIMITS.replacementFrom);
+    const to = createReplacementInput('optReplaceTo', 'replacement-to', item.to, LIMITS.replacementTo);
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'ghost danger';
@@ -110,7 +132,7 @@
     updateReplacementEmptyState();
   }
 
-  function createCommonPhraseControl(labelKey, className, value, multiline = false) {
+  function createCommonPhraseControl(labelKey, className, value, multiline = false, maxLength) {
     const wrap = document.createElement('div');
     wrap.className = 'common-phrase-input';
     const label = document.createElement('label');
@@ -124,12 +146,28 @@
     input.spellcheck = false;
     input.setAttribute('aria-label', t(labelKey));
     wrap.appendChild(input);
+    attachFieldCounter(wrap, input, maxLength);
     return { wrap, input };
   }
 
   function updateCommonPhraseEmptyState() {
     const empty = document.getElementById('common-phrases-empty');
     empty.hidden = document.querySelectorAll('.common-phrase-row').length > 0;
+  }
+
+  function updateCommonPhraseBudget() {
+    const el = document.getElementById('common-phrases-budget');
+    if (!el) return;
+    let used = 0;
+    document.querySelectorAll('.common-phrase-row').forEach((row) => {
+      const title = row.querySelector('.common-phrase-title').value || '';
+      const text = row.querySelector('.common-phrase-text').value || '';
+      used += globalThis.viUtf8ByteLength(title) + globalThis.viUtf8ByteLength(text);
+    });
+    const max = LIMITS.phraseBytes;
+    el.textContent = `${t('optPhraseBudget')} ${used} / ${max} bytes`;
+    el.classList.toggle('is-warning', used >= Math.floor(max * 0.9) && used <= max);
+    el.classList.toggle('is-over', used > max);
   }
 
   function readCommonPhraseRows() {
@@ -159,18 +197,20 @@
     const row = document.createElement('div');
     row.className = 'common-phrase-row';
 
-    const title = createCommonPhraseControl('optCommonPhraseTitle', 'common-phrase-title', item.title);
-    const text = createCommonPhraseControl('optCommonPhraseText', 'common-phrase-text', item.text, true);
+    const title = createCommonPhraseControl('optCommonPhraseTitle', 'common-phrase-title', item.title, false, LIMITS.phraseTitle);
+    const text = createCommonPhraseControl('optCommonPhraseText', 'common-phrase-text', item.text, true, LIMITS.phraseText);
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'ghost danger';
     remove.textContent = t('optRemoveCommonPhrase');
 
-    title.input.addEventListener('input', scheduleCommonPhraseSave);
-    text.input.addEventListener('input', scheduleCommonPhraseSave);
+    const onPhraseInput = () => { scheduleCommonPhraseSave(); updateCommonPhraseBudget(); };
+    title.input.addEventListener('input', onPhraseInput);
+    text.input.addEventListener('input', onPhraseInput);
     remove.addEventListener('click', () => {
       row.remove();
       updateCommonPhraseEmptyState();
+      updateCommonPhraseBudget();
       saveCommonPhrasesNow();
     });
 
@@ -179,6 +219,7 @@
     row.appendChild(remove);
     list.appendChild(row);
     updateCommonPhraseEmptyState();
+    updateCommonPhraseBudget();
     if (focus) title.input.focus();
   }
 
@@ -191,6 +232,7 @@
     list.innerHTML = '';
     globalThis.viNormalizeCommonPhrases(commonPhrases).forEach((item) => appendCommonPhraseRow(item));
     updateCommonPhraseEmptyState();
+    updateCommonPhraseBudget();
   }
 
   function loadAboutInfo() {

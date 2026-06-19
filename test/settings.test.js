@@ -38,6 +38,22 @@ function makeChromeStorage(initial = {}) {
   };
 }
 
+test('settings exposes replacement and phrase limit constants', () => {
+  const storage = makeChromeStorage();
+  const context = loadClassicScript('src/common/settings.js', {
+    chrome: storage.chrome,
+    navigator: { language: 'en-US' },
+  });
+
+  assert.equal(context.VI_REPLACEMENTS_MAX_ITEMS, 50);
+  assert.equal(context.VI_REPLACEMENT_FROM_MAX_CHARS, 200);
+  assert.equal(context.VI_REPLACEMENT_TO_MAX_CHARS, 500);
+  assert.equal(context.VI_COMMON_PHRASES_MAX_ITEMS, 50);
+  assert.equal(context.VI_COMMON_PHRASE_TITLE_MAX_CHARS, 80);
+  assert.equal(context.VI_COMMON_PHRASE_TEXT_MAX_CHARS, 1000);
+  assert.equal(context.VI_COMMON_PHRASES_MAX_BYTES, 5000);
+});
+
 test('viGetSettings returns normalized defaults from navigator language', async () => {
   const storage = makeChromeStorage();
   const context = loadClassicScript('src/common/settings.js', {

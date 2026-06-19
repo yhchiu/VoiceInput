@@ -55,6 +55,7 @@
   "optCommonPhraseTitle": { "message": "Title" },
   "optCommonPhraseText": { "message": "Text to insert" },
   "optRemoveCommonPhrase": { "message": "Remove" },
+  "optPhraseBudget": { "message": "Storage used:" },
   "optSettingsManagement": { "message": "Settings management" },
   "optExportSettingsTitle": { "message": "Export settings" },
   "optExportSettingsHint": { "message": "Export a JSON settings file containing the current settings and shortcut information." },
