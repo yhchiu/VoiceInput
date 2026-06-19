@@ -69,6 +69,7 @@
   function updateReplacementEmptyState() {
     const empty = document.getElementById('replacements-empty');
     empty.hidden = document.querySelectorAll('.replacement-row').length > 0;
+    updateMoveButtonStates('.replacement-row');
   }
 
   let undoTimer = null;
@@ -106,6 +107,63 @@
     const ref = rows[atIndex] || null;
     if (ref) list.insertBefore(row, ref);
     else list.appendChild(row);
+  }
+
+  function moveRow(row, selector, delta) {
+    const list = row.parentNode;
+    if (!list) return false;
+    const rows = Array.from(document.querySelectorAll(selector));
+    const index = rows.indexOf(row);
+    const target = index + delta;
+    if (target < 0 || target >= rows.length) return false;
+    if (delta < 0) {
+      list.insertBefore(row, rows[target]);
+    } else {
+      const ref = rows[target + 1] || null;
+      if (ref) list.insertBefore(row, ref);
+      else list.appendChild(row);
+    }
+    return true;
+  }
+
+  function updateMoveButtonStates(selector) {
+    const rows = Array.from(document.querySelectorAll(selector));
+    rows.forEach((row, i) => {
+      const up = row.querySelector('.row-move-up');
+      const down = row.querySelector('.row-move-down');
+      if (up) up.disabled = i === 0;
+      if (down) down.disabled = i === rows.length - 1;
+    });
+  }
+
+  function createRowActions(row, selector, removeLabelKey, onRemove, afterOrderChange) {
+    const actions = document.createElement('div');
+    actions.className = 'row-actions';
+
+    const up = document.createElement('button');
+    up.type = 'button';
+    up.className = 'ghost icon-btn row-move-up';
+    up.textContent = '↑';
+    up.setAttribute('aria-label', t('optMoveUp'));
+    up.addEventListener('click', () => { if (moveRow(row, selector, -1)) afterOrderChange(); });
+
+    const down = document.createElement('button');
+    down.type = 'button';
+    down.className = 'ghost icon-btn row-move-down';
+    down.textContent = '↓';
+    down.setAttribute('aria-label', t('optMoveDown'));
+    down.addEventListener('click', () => { if (moveRow(row, selector, 1)) afterOrderChange(); });
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'ghost danger row-remove';
+    remove.textContent = t(removeLabelKey);
+    remove.addEventListener('click', onRemove);
+
+    actions.appendChild(up);
+    actions.appendChild(down);
+    actions.appendChild(remove);
+    return actions;
   }
 
   function readReplacementRows() {
@@ -153,18 +211,20 @@
 
     const from = createReplacementInput('optReplaceFrom', 'replacement-from', item.from, LIMITS.replacementFrom);
     const to = createReplacementInput('optReplaceTo', 'replacement-to', item.to, LIMITS.replacementTo);
-    const remove = document.createElement('button');
-    remove.type = 'button';
-    remove.className = 'ghost danger row-remove';
-    remove.textContent = t('optRemoveReplacement');
+    const actions = createRowActions(
+      row,
+      '.replacement-row',
+      'optRemoveReplacement',
+      () => removeReplacementRow(row),
+      () => { updateReplacementEmptyState(); saveReplacementsNow(); },
+    );
 
     from.input.addEventListener('input', scheduleReplacementSave);
     to.input.addEventListener('input', scheduleReplacementSave);
-    remove.addEventListener('click', () => removeReplacementRow(row));
 
     row.appendChild(from.wrap);
     row.appendChild(to.wrap);
-    row.appendChild(remove);
+    row.appendChild(actions);
     insertRowAt(list, row, '.replacement-row', atIndex);
     updateReplacementEmptyState();
     if (focus) from.input.focus();
@@ -204,6 +264,7 @@
   function updateCommonPhraseEmptyState() {
     const empty = document.getElementById('common-phrases-empty');
     empty.hidden = document.querySelectorAll('.common-phrase-row').length > 0;
+    updateMoveButtonStates('.common-phrase-row');
   }
 
   function updateCommonPhraseBudget() {
@@ -267,19 +328,21 @@
 
     const title = createCommonPhraseControl('optCommonPhraseTitle', 'common-phrase-title', item.title, false, LIMITS.phraseTitle);
     const text = createCommonPhraseControl('optCommonPhraseText', 'common-phrase-text', item.text, true, LIMITS.phraseText);
-    const remove = document.createElement('button');
-    remove.type = 'button';
-    remove.className = 'ghost danger row-remove';
-    remove.textContent = t('optRemoveCommonPhrase');
+    const actions = createRowActions(
+      row,
+      '.common-phrase-row',
+      'optRemoveCommonPhrase',
+      () => removeCommonPhraseRow(row),
+      () => { updateCommonPhraseEmptyState(); saveCommonPhrasesNow(); },
+    );
 
     const onPhraseInput = () => { scheduleCommonPhraseSave(); updateCommonPhraseBudget(); };
     title.input.addEventListener('input', onPhraseInput);
     text.input.addEventListener('input', onPhraseInput);
-    remove.addEventListener('click', () => removeCommonPhraseRow(row));
 
     row.appendChild(title.wrap);
     row.appendChild(text.wrap);
-    row.appendChild(remove);
+    row.appendChild(actions);
     insertRowAt(list, row, '.common-phrase-row', atIndex);
     updateCommonPhraseEmptyState();
     updateCommonPhraseBudget();

@@ -353,6 +353,28 @@ button.ghost.danger:hover {
   font-weight: 600;
 }
 
+/* Row action controls (reorder + remove) */
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.icon-btn {
+  padding: 6px 9px;
+  line-height: 1;
+  min-width: 34px;
+  text-align: center;
+}
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.icon-btn:disabled:hover {
+  background: #fff;
+  border-color: var(--border-strong);
+  color: var(--text-soft);
+}
+
 /* Replacement rules */
 .replacement-list {
   display: flex;

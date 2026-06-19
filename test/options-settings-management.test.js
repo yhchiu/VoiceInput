@@ -86,6 +86,9 @@ class FakeElement {
   }
 
   appendChild(child) {
+    if (child.parentNode) {
+      child.parentNode.children = child.parentNode.children.filter((c) => c !== child);
+    }
     this.children.push(child);
     child.parentNode = this;
     child.removed = false;
@@ -93,6 +96,9 @@ class FakeElement {
   }
 
   insertBefore(child, ref) {
+    if (child.parentNode) {
+      child.parentNode.children = child.parentNode.children.filter((c) => c !== child);
+    }
     child.parentNode = this;
     child.removed = false;
     const idx = ref ? this.children.indexOf(ref) : -1;
@@ -637,7 +643,7 @@ test('options common phrase rows load, edit, and remove saved phrases', async ()
   assert.equal(saved.commonPhrases[0].title, 'Updated');
   assert.equal(saved.commonPhrases[0].text, 'Updated text');
 
-  await rows[0].children[2].click();
+  await rows[0].querySelector('.row-remove').click();
   await flushAsync();
   saved = harness.storage.syncData[SETTINGS_KEY];
   assert.equal(saved.commonPhrases.length, 0);
@@ -723,6 +729,40 @@ test('options applies replacement limits via maxlength and counters', async () =
   const counters = row.querySelectorAll('.field-counter');
   assert.equal(counters[0].textContent, '1/200');
   assert.equal(counters[1].textContent, '1/500');
+});
+
+test('options reorders replacement rules with the move controls', async () => {
+  const harness = await bootOptionsPage({
+    initialSettings: {
+      replacements: [
+        { from: 'a', to: '1' },
+        { from: 'b', to: '2' },
+        { from: 'c', to: '3' },
+      ],
+    },
+  });
+
+  let rows = harness.document.querySelectorAll('.replacement-row');
+  assert.equal(rows.length, 3);
+  assert.equal(rows[0].querySelector('.row-move-up').disabled, true);
+  assert.equal(rows[2].querySelector('.row-move-down').disabled, true);
+
+  await rows[0].querySelector('.row-move-down').click();
+  await flushAsync();
+
+  let saved = harness.storage.syncData[SETTINGS_KEY];
+  assert.equal(saved.replacements[0].from, 'b');
+  assert.equal(saved.replacements[1].from, 'a');
+  assert.equal(saved.replacements[2].from, 'c');
+
+  rows = harness.document.querySelectorAll('.replacement-row');
+  await rows[2].querySelector('.row-move-up').click();
+  await flushAsync();
+
+  saved = harness.storage.syncData[SETTINGS_KEY];
+  assert.equal(saved.replacements[0].from, 'b');
+  assert.equal(saved.replacements[1].from, 'c');
+  assert.equal(saved.replacements[2].from, 'a');
 });
 
 test('options import reports partial shortcut restore failures', async () => {

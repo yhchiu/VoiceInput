@@ -57,6 +57,8 @@
   "optCommonPhraseTitle": { "message": "Title" },
   "optCommonPhraseText": { "message": "Text to insert" },
   "optRemoveCommonPhrase": { "message": "Remove" },
+  "optMoveUp": { "message": "Move up" },
+  "optMoveDown": { "message": "Move down" },
   "optPhraseBudget": { "message": "Storage used:" },
   "optSettingsManagement": { "message": "Settings management" },
   "optExportSettingsTitle": { "message": "Export settings" },

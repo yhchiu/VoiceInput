@@ -57,6 +57,8 @@
   "optCommonPhraseTitle": { "message": "标题" },
   "optCommonPhraseText": { "message": "要插入的文字" },
   "optRemoveCommonPhrase": { "message": "移除" },
+  "optMoveUp": { "message": "上移" },
+  "optMoveDown": { "message": "下移" },
   "optPhraseBudget": { "message": "已使用空间：" },
   "optSettingsManagement": { "message": "设置管理" },
   "optExportSettingsTitle": { "message": "设置导出" },
