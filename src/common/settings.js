@@ -2,6 +2,8 @@
 // Exposes settings accessors plus text replacement helpers on globalThis.
 (function () {
   const KEY = 'voiceInput.settings.v1';
+  const SETTINGS_EXPORT_TYPE = 'VoiceInputSettings';
+  const SETTINGS_EXPORT_VERSION = 1;
   const SCRATCHPAD_STORAGE_KEY = 'voiceInput.scratchpad.v1';
   const SCRATCHPAD_STORAGE_MODES = Object.freeze({
     NONE: 'none',
@@ -70,6 +72,46 @@
     if ('lang' in out && typeof out.lang !== 'string') delete out.lang;
     if ('replacements' in out) out.replacements = normalizeReplacements(out.replacements);
     return out;
+  }
+
+  function isPlainSettingsObject(value) {
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function normalizeShortcut(command) {
+    const value = command && typeof command === 'object' ? command : {};
+    return {
+      name: typeof value.name === 'string' ? value.name : '',
+      description: typeof value.description === 'string' ? value.description : '',
+      shortcut: typeof value.shortcut === 'string' ? value.shortcut : '',
+    };
+  }
+
+  function viCreateSettingsExportPayload(settings, shortcuts, exportedAt) {
+    return {
+      type: SETTINGS_EXPORT_TYPE,
+      version: SETTINGS_EXPORT_VERSION,
+      exportedAt: typeof exportedAt === 'string' ? exportedAt : new Date().toISOString(),
+      settings: isPlainSettingsObject(settings) ? settings : {},
+      shortcuts: Array.isArray(shortcuts) ? shortcuts.map(normalizeShortcut) : [],
+    };
+  }
+
+  function viParseSettingsImportPayload(value) {
+    if (!isPlainSettingsObject(value)) {
+      throw new Error('invalid-settings-file');
+    }
+
+    const hasWrappedSettings = Object.prototype.hasOwnProperty.call(value, 'settings');
+    const settings = hasWrappedSettings ? value.settings : value;
+    if (!isPlainSettingsObject(settings)) {
+      throw new Error('invalid-settings-file');
+    }
+
+    return {
+      settings,
+      shortcuts: Array.isArray(value.shortcuts) ? value.shortcuts.map(normalizeShortcut) : [],
+    };
   }
 
   function utf8BytesForCodePoint(codePoint) {
@@ -267,10 +309,15 @@
   }
 
   globalThis.VI_SETTINGS_KEY = KEY;
+  globalThis.VI_SETTINGS_EXPORT_TYPE = SETTINGS_EXPORT_TYPE;
+  globalThis.VI_SETTINGS_EXPORT_VERSION = SETTINGS_EXPORT_VERSION;
   globalThis.VI_SCRATCHPAD_STORAGE_KEY = SCRATCHPAD_STORAGE_KEY;
   globalThis.VI_SCRATCHPAD_STORAGE_MODES = SCRATCHPAD_STORAGE_MODES;
   globalThis.VI_DEFAULT_SETTINGS = DEFAULTS;
   globalThis.viNormalizeReplacements = normalizeReplacements;
+  globalThis.viNormalizeShortcut = normalizeShortcut;
+  globalThis.viCreateSettingsExportPayload = viCreateSettingsExportPayload;
+  globalThis.viParseSettingsImportPayload = viParseSettingsImportPayload;
   globalThis.viNormalizeScratchpadStorageMode = normalizeScratchpadStorageMode;
   globalThis.viUtf8ByteLength = viUtf8ByteLength;
   globalThis.viScratchpadStorageMaxBytes = viScratchpadStorageMaxBytes;

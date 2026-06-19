@@ -303,14 +303,6 @@
     return [];
   }
 
-  function normalizeShortcut(command) {
-    return {
-      name: typeof command.name === 'string' ? command.name : '',
-      description: typeof command.description === 'string' ? command.description : '',
-      shortcut: typeof command.shortcut === 'string' ? command.shortcut : '',
-    };
-  }
-
   function downloadJson(fileName, value) {
     const blob = new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -325,32 +317,9 @@
 
   async function exportSettings() {
     const settings = await globalThis.viGetSettings();
-    const shortcuts = (await getShortcuts()).map(normalizeShortcut);
-    const payload = {
-      type: 'VoiceInputSettings',
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      settings,
-      shortcuts,
-    };
+    const payload = globalThis.viCreateSettingsExportPayload(settings, await getShortcuts());
     downloadJson(`VoiceInput-settings-${formatDateStamp(new Date())}.json`, payload);
     setStatus('export-settings-status', t('optSettingsExported'));
-  }
-
-  function parseImportPayload(value) {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) {
-      throw new Error('invalid-settings-file');
-    }
-    const settings = value.settings && typeof value.settings === 'object'
-      ? value.settings
-      : value;
-    if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
-      throw new Error('invalid-settings-file');
-    }
-    return {
-      settings,
-      shortcuts: Array.isArray(value.shortcuts) ? value.shortcuts.map(normalizeShortcut) : [],
-    };
   }
 
   async function restoreShortcuts(shortcuts) {
@@ -376,7 +345,7 @@
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      const payload = parseImportPayload(parsed);
+      const payload = globalThis.viParseSettingsImportPayload(parsed);
       await globalThis.viReplaceSettings(payload.settings);
       const shortcutResult = await restoreShortcuts(payload.shortcuts);
       await load();
