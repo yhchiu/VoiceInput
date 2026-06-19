@@ -21,6 +21,24 @@ It uses the browser Web Speech API. When Chrome returns more than one possible r
 3. Click **Load unpacked**.
 4. Select this project folder.
 
+## Testing
+
+Tests use Node's built-in test runner and do not require third-party dependencies.
+
+Run all tests:
+
+```sh
+npm test
+```
+
+If `npm` is not available, run the same test suite directly with Node:
+
+```sh
+node --test 'test/*.test.js'
+```
+
+The tests load the extension's classic scripts in isolated VM contexts and use lightweight fakes for Chrome APIs and DOM behavior.
+
 ## How To Use
 
 1. Click a text field on any web page.
