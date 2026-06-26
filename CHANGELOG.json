@@ -1,5 +1,36 @@
 [
   {
+    "version": "1.1.1",
+    "date": "2026-06-26",
+    "items": [
+      {
+        "commit": "6ecc56a705dabcc7613217a4801596a0ec5bfdd2",
+        "type": "feat",
+        "subject": "feat(sidepanel): add insert button to scratchpad actions"
+      },
+      {
+        "commit": "c22ff52254582f394d10d145cdd8e27ff59a25a0",
+        "type": "feat",
+        "subject": "feat(sidepanel): show checkmark when scratchpad copy succeeds"
+      },
+      {
+        "commit": "2f66c9b125ca6a061aa05cb91152ea8b0c02baa9",
+        "type": "feat",
+        "subject": "feat(phrases): add copy button to common phrase list"
+      },
+      {
+        "commit": "a472bcae0461dd6393fff73408c522038802dd64",
+        "type": "fix",
+        "subject": "fix: use auto sentinel for recognition language"
+      },
+      {
+        "commit": "86998b32dbba776cbd8e71bd5e50594321ee8a57",
+        "type": "feat",
+        "subject": "feat(options): add responsive settings page layout"
+      }
+    ]
+  },
+  {
     "version": "1.1.0",
     "date": "2026-06-20",
     "items": [
