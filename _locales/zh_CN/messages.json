@@ -122,6 +122,7 @@
   "commonPhrasesEmpty": { "message": "尚无常用字词" },
   "commonPhraseInserted": { "message": "已插入" },
   "commonPhraseInsertFailed": { "message": "请先聚焦输入栏。" },
+  "commonPhraseCopy": { "message": "复制字词" },
   "popupHint": { "message": "提示：请先将焦点停在输入栏，再按快捷键。" },
   "sidePanelHint": { "message": "提示：请先将焦点停在网页输入栏，再回到此侧边面板开始识别。" },
   "sidePanelModeDisabled": { "message": "侧边面板模式尚未开启，请先到设置启用。" },

@@ -8,6 +8,13 @@
   let copyStatusTimer = null;
   let phraseStatusTimer = null;
 
+  const PHRASE_COPY_ICON =
+    '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+  const PHRASE_CHECK_ICON =
+    '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
+  let phraseCopiedButton = null;
+  let phraseCopiedTimer = null;
+
   function applyI18n() {
     document.querySelectorAll('[data-i18n]').forEach((el) => {
       const key = el.getAttribute('data-i18n');
@@ -136,6 +143,9 @@
     }
 
     phrases.forEach((phrase) => {
+      const row = document.createElement('div');
+      row.className = 'phrase-row';
+
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'phrase-button';
@@ -149,8 +159,53 @@
       preview.textContent = phrasePreview(phrase.text);
       button.appendChild(preview);
       button.addEventListener('click', () => insertCommonPhrase(phrase.text));
-      list.appendChild(button);
+      row.appendChild(button);
+
+      const copy = document.createElement('button');
+      copy.type = 'button';
+      copy.className = 'phrase-copy';
+      copy.title = t('commonPhraseCopy');
+      copy.setAttribute('aria-label', t('commonPhraseCopy'));
+      copy.innerHTML = PHRASE_COPY_ICON;
+      copy.addEventListener('click', () => copyCommonPhrase(phrase.text, copy));
+      row.appendChild(copy);
+
+      list.appendChild(row);
     });
+  }
+
+  function resetPhraseCopied() {
+    if (phraseCopiedTimer) {
+      clearTimeout(phraseCopiedTimer);
+      phraseCopiedTimer = null;
+    }
+    if (phraseCopiedButton) {
+      phraseCopiedButton.classList.remove('is-copied');
+      phraseCopiedButton.innerHTML = PHRASE_COPY_ICON;
+      phraseCopiedButton.title = t('commonPhraseCopy');
+      phraseCopiedButton.setAttribute('aria-label', t('commonPhraseCopy'));
+      phraseCopiedButton = null;
+    }
+  }
+
+  function showPhraseCopied(button) {
+    if (!button) return;
+    resetPhraseCopied();
+    phraseCopiedButton = button;
+    button.classList.add('is-copied');
+    button.innerHTML = PHRASE_CHECK_ICON;
+    button.title = t('popupCopied');
+    button.setAttribute('aria-label', t('popupCopied'));
+    phraseCopiedTimer = setTimeout(resetPhraseCopied, 1200);
+  }
+
+  async function copyCommonPhrase(text, button) {
+    try {
+      await copyTextToClipboard(text);
+      showPhraseCopied(button);
+    } catch (_) {
+      setPhraseStatus(t('popupCopyFailed'), true);
+    }
   }
 
   async function insertCommonPhrase(text) {

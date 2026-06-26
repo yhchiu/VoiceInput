@@ -122,6 +122,7 @@
   "commonPhrasesEmpty": { "message": "尚無常用字詞" },
   "commonPhraseInserted": { "message": "已插入" },
   "commonPhraseInsertFailed": { "message": "請先聚焦輸入欄位。" },
+  "commonPhraseCopy": { "message": "複製字詞" },
   "popupHint": { "message": "提示：請先將焦點停在輸入欄，再按快捷鍵。" },
   "sidePanelHint": { "message": "提示：請先將焦點停在網頁輸入欄，再回到此側邊面板開始辨識。" },
   "sidePanelModeDisabled": { "message": "側邊面板模式尚未開啟，請先至設定啟用。" },

@@ -218,8 +218,13 @@ button.warn:hover { background: #b91c1c; }
   max-height: 150px;
   overflow-y: auto;
 }
+.phrase-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
 .phrase-button {
-  width: 100%;
+  flex: 1 1 auto;
   min-width: 0;
   padding: 7px 9px;
   border: 1px solid #e2e8f0;
@@ -236,6 +241,33 @@ button.warn:hover { background: #b91c1c; }
   outline: none;
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
   border-color: #7c3aed;
+}
+.phrase-copy {
+  flex: 0 0 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #64748b;
+  padding: 0;
+}
+.phrase-copy:not(:disabled):hover {
+  border-color: #c4b5fd;
+  background: #f5f3ff;
+  color: #5b21b6;
+}
+.phrase-copy:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+  border-color: #7c3aed;
+}
+.phrase-copy.is-copied,
+.phrase-copy.is-copied:hover {
+  color: #16a34a;
+  border-color: #86efac;
+  background: #f0fdf4;
 }
 .phrase-title,
 .phrase-preview {

@@ -122,6 +122,7 @@
   "commonPhrasesEmpty": { "message": "No common phrases yet" },
   "commonPhraseInserted": { "message": "Inserted" },
   "commonPhraseInsertFailed": { "message": "Focus an input field first." },
+  "commonPhraseCopy": { "message": "Copy phrase" },
   "popupHint": { "message": "Tip: focus a field first, then press the shortcut." },
   "sidePanelHint": { "message": "Tip: focus a field on the page, then return to this side panel to start recognition." },
   "sidePanelModeDisabled": { "message": "Side Panel Mode is not enabled. Enable it in settings first." },
