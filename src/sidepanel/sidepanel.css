@@ -327,7 +327,7 @@ button.link:focus-visible {
   width: 100%;
   min-width: 0;
   min-height: 58px;
-  padding: 8px 72px 28px 10px;
+  padding: 8px 100px 28px 10px;
   resize: vertical;
   border: 1px solid #cbd5e1;
   border-radius: 6px;

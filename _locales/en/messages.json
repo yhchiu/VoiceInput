@@ -131,6 +131,7 @@
   "sidePanelMicPermissionOpened": { "message": "A microphone permission tab was opened. Grant access there, then return here and start recognition again." },
   "sidePanelScratchpad": { "message": "Scratchpad" },
   "sidePanelScratchpadPlaceholder": { "message": "Click here to use this area as the voice input target." },
+  "sidePanelInsertScratchpad": { "message": "Insert scratchpad into page field" },
   "sidePanelCopyScratchpad": { "message": "Copy scratchpad" },
   "sidePanelClearScratchpad": { "message": "Clear scratchpad" },
   "sidePanelScratchpadStorage": { "message": "Save" },

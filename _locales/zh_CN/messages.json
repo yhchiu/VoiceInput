@@ -131,6 +131,7 @@
   "sidePanelMicPermissionOpened": { "message": "已打开麦克风授权标签页。请在该标签页授权后，回到侧边面板再次开始识别。" },
   "sidePanelScratchpad": { "message": "暂存输入区" },
   "sidePanelScratchpadPlaceholder": { "message": "点此可将这里作为语音输入目标。" },
+  "sidePanelInsertScratchpad": { "message": "插入暂存输入区到网页栏" },
   "sidePanelCopyScratchpad": { "message": "复制暂存输入区" },
   "sidePanelClearScratchpad": { "message": "清除暂存输入区" },
   "sidePanelScratchpadStorage": { "message": "保存" },

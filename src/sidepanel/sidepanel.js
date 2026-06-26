@@ -35,9 +35,12 @@
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
   const PHRASE_CHECK_ICON =
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
-  let copiedButton = null;
-  let copiedButtonLabel = '';
-  let copiedButtonTimer = null;
+  const SCRATCHPAD_INSERT_ICON =
+    '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>';
+  let flashButton = null;
+  let flashButtonIcon = '';
+  let flashButtonLabel = '';
+  let flashButtonTimer = null;
 
   const ERR_TO_KEY = {
     'no-speech': 'errNoSpeech',
@@ -242,10 +245,12 @@
 
   function updateScratchpadActions() {
     const scratchpad = getScratchpad();
+    const insert = document.getElementById('insert-scratchpad');
     const copy = document.getElementById('copy-scratchpad');
     const clear = document.getElementById('clear-scratchpad');
-    if (!scratchpad || !copy || !clear) return;
+    if (!scratchpad || !insert || !copy || !clear) return;
     const hasText = scratchpad.value.length > 0;
+    insert.disabled = !hasText;
     copy.disabled = !hasText;
     clear.disabled = !hasText;
   }
@@ -326,39 +331,42 @@
     });
   }
 
-  function resetCopiedButton() {
-    if (copiedButtonTimer) {
-      clearTimeout(copiedButtonTimer);
-      copiedButtonTimer = null;
+  function resetButtonFlash() {
+    if (flashButtonTimer) {
+      clearTimeout(flashButtonTimer);
+      flashButtonTimer = null;
     }
-    if (copiedButton) {
-      copiedButton.classList.remove('is-copied');
-      copiedButton.innerHTML = PHRASE_COPY_ICON;
-      copiedButton.title = copiedButtonLabel;
-      copiedButton.setAttribute('aria-label', copiedButtonLabel);
-      copiedButton = null;
-      copiedButtonLabel = '';
+    if (flashButton) {
+      flashButton.classList.remove('is-copied');
+      flashButton.innerHTML = flashButtonIcon;
+      flashButton.title = flashButtonLabel;
+      flashButton.setAttribute('aria-label', flashButtonLabel);
+      flashButton = null;
+      flashButtonIcon = '';
+      flashButtonLabel = '';
     }
   }
 
-  // Swap a copy button to a checkmark for a moment, then restore its copy
-  // icon and the given label. Shared by the phrase list and the scratchpad.
-  function showCopiedButton(button, restoreLabel) {
+  // Flash a button's icon to a checkmark for a moment, then restore the given
+  // icon and label. Shared by the phrase list and the scratchpad copy/insert
+  // buttons, which each have their own resting icon.
+  function flashButtonDone(button, doneLabel, restoreIcon, restoreLabel) {
     if (!button) return;
-    resetCopiedButton();
-    copiedButton = button;
-    copiedButtonLabel = restoreLabel;
+    resetButtonFlash();
+    flashButton = button;
+    flashButtonIcon = restoreIcon;
+    flashButtonLabel = restoreLabel;
     button.classList.add('is-copied');
     button.innerHTML = PHRASE_CHECK_ICON;
-    button.title = t('popupCopied');
-    button.setAttribute('aria-label', t('popupCopied'));
-    copiedButtonTimer = setTimeout(resetCopiedButton, 1200);
+    button.title = doneLabel;
+    button.setAttribute('aria-label', doneLabel);
+    flashButtonTimer = setTimeout(resetButtonFlash, 1200);
   }
 
   async function copyCommonPhrase(text, button) {
     try {
       await copyTextToClipboard(text);
-      showCopiedButton(button, t('commonPhraseCopy'));
+      flashButtonDone(button, t('popupCopied'), PHRASE_COPY_ICON, t('commonPhraseCopy'));
     } catch (_) {
       setCommonPhraseStatus(t('popupCopyFailed'), true);
     }
@@ -499,12 +507,37 @@
     scheduleScratchpadSave();
   }
 
+  async function insertScratchpadIntoPage() {
+    const scratchpad = getScratchpad();
+    if (!scratchpad || !scratchpad.value) return;
+    try {
+      const res = await sendBackground(MSG.INSERT_TEXT, { text: scratchpad.value });
+      if (res && res.ok) {
+        flashButtonDone(
+          document.getElementById('insert-scratchpad'),
+          t('commonPhraseInserted'),
+          SCRATCHPAD_INSERT_ICON,
+          t('sidePanelInsertScratchpad')
+        );
+      } else {
+        setScratchpadStatus(t('commonPhraseInsertFailed'), true);
+      }
+    } catch (_) {
+      setScratchpadStatus(t('commonPhraseInsertFailed'), true);
+    }
+  }
+
   async function copyScratchpad() {
     const scratchpad = getScratchpad();
     if (!scratchpad || !scratchpad.value) return;
     try {
       await copyTextToClipboard(scratchpad.value);
-      showCopiedButton(document.getElementById('copy-scratchpad'), t('sidePanelCopyScratchpad'));
+      flashButtonDone(
+        document.getElementById('copy-scratchpad'),
+        t('popupCopied'),
+        PHRASE_COPY_ICON,
+        t('sidePanelCopyScratchpad')
+      );
     } catch (_) {
       setScratchpadStatus(t('popupCopyFailed'), true);
     }
@@ -534,12 +567,15 @@
 
   function setupScratchpad() {
     const scratchpad = getScratchpad();
+    const insert = document.getElementById('insert-scratchpad');
     const copy = document.getElementById('copy-scratchpad');
     const clear = document.getElementById('clear-scratchpad');
     const storage = document.getElementById('scratchpad-storage');
-    if (!scratchpad || !copy || !clear || !storage) return;
+    if (!scratchpad || !insert || !copy || !clear || !storage) return;
 
     scratchpad.placeholder = t('sidePanelScratchpadPlaceholder');
+    insert.title = t('sidePanelInsertScratchpad');
+    insert.setAttribute('aria-label', t('sidePanelInsertScratchpad'));
     copy.title = t('sidePanelCopyScratchpad');
     copy.setAttribute('aria-label', t('sidePanelCopyScratchpad'));
     clear.title = t('sidePanelClearScratchpad');
@@ -562,8 +598,10 @@
         setScratchpadStatus(t('sidePanelScratchpadSaveFailed'), true);
       });
     });
+    insert.addEventListener('mousedown', (e) => e.preventDefault());
     copy.addEventListener('mousedown', (e) => e.preventDefault());
     clear.addEventListener('mousedown', (e) => e.preventDefault());
+    insert.addEventListener('click', insertScratchpadIntoPage);
     copy.addEventListener('click', copyScratchpad);
     clear.addEventListener('click', clearScratchpad);
     storage.addEventListener('change', (e) => {
