@@ -20,7 +20,10 @@
     }
 
     const r = new SR();
-    r.lang = opts.lang || 'en-US';
+    const lang = typeof globalThis.viResolveRecognitionLang === 'function'
+      ? globalThis.viResolveRecognitionLang(opts.lang)
+      : opts.lang;
+    r.lang = lang || 'en-US';
     r.maxAlternatives = Math.max(1, Math.min(10, Number(opts.maxAlternatives) || 1));
     r.continuous = !!opts.continuous;
     r.interimResults = !!opts.interimResults;

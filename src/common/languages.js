@@ -1,6 +1,8 @@
 // Recognition language options shared by options and popup pages.
 // Exposes VI_LANG_CODES, viFormatLangLabel, and viBuildLangOptions.
 (function () {
+  const LANG_AUTO = globalThis.VI_LANG_AUTO || 'auto';
+
   // Curated BCP-47 codes that Chrome's SpeechRecognition usually understands.
   const LANG_CODES = Object.freeze([
     'en-US', 'en-GB', 'en-AU', 'en-CA', 'en-IN',
@@ -58,32 +60,31 @@
 
   function buildLangOptions(select, currentLang, autoLabel = 'Auto') {
     select.innerHTML = '';
-    const navLang = navigator.language || 'en-US';
+    const navLang = (typeof navigator !== 'undefined' && navigator.language) || 'en-US';
 
     const auto = document.createElement('option');
-    auto.value = navLang;
+    auto.value = LANG_AUTO;
     auto.textContent = `${autoLabel} (${formatLangLabel(navLang)})`;
     select.appendChild(auto);
 
-    const seen = new Set([navLang]);
-    LANG_CODES.forEach((code) => {
-      if (seen.has(code)) return;
+    const seen = new Set([LANG_AUTO]);
+    const appendLangOption = (code) => {
+      if (!code || seen.has(code)) return;
       seen.add(code);
       const opt = document.createElement('option');
       opt.value = code;
       opt.textContent = formatLangLabel(code);
       select.appendChild(opt);
-    });
+    };
 
-    if (!seen.has(currentLang)) {
-      const opt = document.createElement('option');
-      opt.value = currentLang;
-      opt.textContent = formatLangLabel(currentLang);
-      select.appendChild(opt);
-    }
+    LANG_CODES.forEach(appendLangOption);
+    appendLangOption(navLang);
+
+    appendLangOption(currentLang);
     select.value = currentLang;
   }
 
+  globalThis.VI_LANG_AUTO = LANG_AUTO;
   globalThis.VI_LANG_CODES = LANG_CODES;
   globalThis.viFormatLangLabel = formatLangLabel;
   globalThis.viBuildLangOptions = buildLangOptions;

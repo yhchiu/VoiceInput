@@ -129,6 +129,35 @@ test('viCreateRecognizer configures SpeechRecognition and emits callbacks', () =
   assert.equal(ended[0].resultSent, true);
 });
 
+test('viCreateRecognizer resolves auto language before configuring SpeechRecognition', () => {
+  class FakeSpeechRecognition {
+    constructor() {
+      FakeSpeechRecognition.instances.push(this);
+    }
+
+    start() {
+      this.started = true;
+    }
+  }
+  FakeSpeechRecognition.instances = [];
+
+  const context = loadClassicScript('src/common/settings.js', {
+    SpeechRecognition: FakeSpeechRecognition,
+    isSecureContext: true,
+    navigator: { language: 'zh-TW' },
+  });
+  loadClassicScript('src/common/recognizer.js', context);
+
+  const handle = context.viCreateRecognizer({
+    lang: context.VI_LANG_AUTO,
+  });
+  const recognition = FakeSpeechRecognition.instances[0];
+
+  assert.equal(handle.ok, true);
+  assert.equal(recognition.started, true);
+  assert.equal(recognition.lang, 'zh-TW');
+});
+
 test('viCreateRecognizer handles start failures', () => {
   class ThrowingSpeechRecognition {
     start() {

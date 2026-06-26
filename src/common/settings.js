@@ -20,10 +20,11 @@
   const REPLACEMENTS_MAX_ITEMS = 50;
   const REPLACEMENT_FROM_MAX_CHARS = 200;
   const REPLACEMENT_TO_MAX_CHARS = 500;
+  const LANG_AUTO = 'auto';
 
   const DEFAULTS = Object.freeze({
     maxAlternatives: 3,
-    lang: (typeof navigator !== 'undefined' && navigator.language) || 'en-US',
+    lang: LANG_AUTO,
     continuous: false,
     interimResults: false,
     autoInsertIfSingle: true,
@@ -116,6 +117,15 @@
     if (value === SCRATCHPAD_STORAGE_MODES.LOCAL) return SCRATCHPAD_STORAGE_MODES.LOCAL;
     if (value === SCRATCHPAD_STORAGE_MODES.SYNC) return SCRATCHPAD_STORAGE_MODES.SYNC;
     return SCRATCHPAD_STORAGE_MODES.NONE;
+  }
+
+  function getNavigatorLanguage() {
+    return (typeof navigator !== 'undefined' && navigator.language) || 'en-US';
+  }
+
+  function viResolveRecognitionLang(lang) {
+    if (lang === LANG_AUTO) return getNavigatorLanguage();
+    return lang;
   }
 
   function normalize(partial) {
@@ -369,6 +379,7 @@
   globalThis.VI_SETTINGS_KEY = KEY;
   globalThis.VI_SETTINGS_EXPORT_TYPE = SETTINGS_EXPORT_TYPE;
   globalThis.VI_SETTINGS_EXPORT_VERSION = SETTINGS_EXPORT_VERSION;
+  globalThis.VI_LANG_AUTO = LANG_AUTO;
   globalThis.VI_SCRATCHPAD_STORAGE_KEY = SCRATCHPAD_STORAGE_KEY;
   globalThis.VI_SCRATCHPAD_STORAGE_MODES = SCRATCHPAD_STORAGE_MODES;
   globalThis.VI_DEFAULT_SETTINGS = DEFAULTS;
@@ -384,6 +395,7 @@
   globalThis.viNormalizeShortcut = normalizeShortcut;
   globalThis.viCreateSettingsExportPayload = viCreateSettingsExportPayload;
   globalThis.viParseSettingsImportPayload = viParseSettingsImportPayload;
+  globalThis.viResolveRecognitionLang = viResolveRecognitionLang;
   globalThis.viNormalizeScratchpadStorageMode = normalizeScratchpadStorageMode;
   globalThis.viUtf8ByteLength = viUtf8ByteLength;
   globalThis.viScratchpadStorageMaxBytes = viScratchpadStorageMaxBytes;

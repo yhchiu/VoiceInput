@@ -48,13 +48,14 @@ test('settings exposes replacement and phrase limit constants', () => {
   assert.equal(context.VI_REPLACEMENTS_MAX_ITEMS, 50);
   assert.equal(context.VI_REPLACEMENT_FROM_MAX_CHARS, 200);
   assert.equal(context.VI_REPLACEMENT_TO_MAX_CHARS, 500);
+  assert.equal(context.VI_LANG_AUTO, 'auto');
   assert.equal(context.VI_COMMON_PHRASES_MAX_ITEMS, 50);
   assert.equal(context.VI_COMMON_PHRASE_TITLE_MAX_CHARS, 80);
   assert.equal(context.VI_COMMON_PHRASE_TEXT_MAX_CHARS, 1000);
   assert.equal(context.VI_COMMON_PHRASES_MAX_BYTES, 5000);
 });
 
-test('viGetSettings returns normalized defaults from navigator language', async () => {
+test('viGetSettings returns normalized defaults with auto language', async () => {
   const storage = makeChromeStorage();
   const context = loadClassicScript('src/common/settings.js', {
     chrome: storage.chrome,
@@ -64,7 +65,7 @@ test('viGetSettings returns normalized defaults from navigator language', async 
   const settings = await context.viGetSettings();
 
   assert.equal(settings.maxAlternatives, 3);
-  assert.equal(settings.lang, 'zh-TW');
+  assert.equal(settings.lang, 'auto');
   assert.equal(settings.continuous, false);
   assert.equal(settings.interimResults, false);
   assert.equal(settings.autoInsertIfSingle, true);
@@ -110,7 +111,7 @@ test('viSetSettings clamps and normalizes persisted settings', async () => {
   assert.equal(next.autoInsertIfSingle, false);
   assert.equal(next.sidePanelMode, true);
   assert.equal(next.scratchpadStorageMode, 'sync');
-  assert.equal(next.lang, 'en-US');
+  assert.equal(next.lang, 'auto');
   assert.equal(next.replacements.length, 2);
   assert.equal(next.replacements[0].from, 'foo');
   assert.equal(next.replacements[0].to, 'bar');
@@ -156,8 +157,25 @@ test('viGetSettings falls back to defaults when storage fails', async () => {
 
   const settings = await context.viGetSettings();
 
-  assert.equal(settings.lang, 'ja-JP');
+  assert.equal(settings.lang, 'auto');
   assert.equal(settings.maxAlternatives, 3);
+});
+
+test('viResolveRecognitionLang resolves auto from navigator language', () => {
+  const context = loadClassicScript('src/common/settings.js', {
+    navigator: { language: 'zh-TW' },
+  });
+
+  assert.equal(context.viResolveRecognitionLang(context.VI_LANG_AUTO), 'zh-TW');
+  assert.equal(context.viResolveRecognitionLang('ja-JP'), 'ja-JP');
+});
+
+test('viResolveRecognitionLang falls back when navigator language is unavailable', () => {
+  const context = loadClassicScript('src/common/settings.js', {
+    navigator: { language: '' },
+  });
+
+  assert.equal(context.viResolveRecognitionLang(context.VI_LANG_AUTO), 'en-US');
 });
 
 test('common phrase helpers ignore invalid entries and derive missing titles', () => {
