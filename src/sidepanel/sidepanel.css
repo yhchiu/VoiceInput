@@ -284,6 +284,11 @@ button.link:focus-visible {
   border-color: #86efac;
   background: #f0fdf4;
 }
+.icon-button.is-copied,
+.icon-button.is-copied:hover {
+  color: #16a34a;
+  background: #f0fdf4;
+}
 .phrase-title,
 .phrase-preview {
   display: block;
