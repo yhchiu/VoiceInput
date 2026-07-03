@@ -12,8 +12,10 @@
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
   const PHRASE_CHECK_ICON =
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
-  let phraseCopiedButton = null;
-  let phraseCopiedTimer = null;
+  let flashButton = null;
+  let flashButtonIcon = '';
+  let flashButtonLabel = '';
+  let flashButtonTimer = null;
 
   function applyI18n() {
     document.querySelectorAll('[data-i18n]').forEach((el) => {
@@ -174,35 +176,42 @@
     });
   }
 
-  function resetPhraseCopied() {
-    if (phraseCopiedTimer) {
-      clearTimeout(phraseCopiedTimer);
-      phraseCopiedTimer = null;
+  // Flash a button's icon to a checkmark for a moment, then restore the given
+  // icon and label. Shared by the common phrase copy buttons and the recent
+  // result copy button, which use the same copy glyph.
+  function resetButtonFlash() {
+    if (flashButtonTimer) {
+      clearTimeout(flashButtonTimer);
+      flashButtonTimer = null;
     }
-    if (phraseCopiedButton) {
-      phraseCopiedButton.classList.remove('is-copied');
-      phraseCopiedButton.innerHTML = PHRASE_COPY_ICON;
-      phraseCopiedButton.title = t('commonPhraseCopy');
-      phraseCopiedButton.setAttribute('aria-label', t('commonPhraseCopy'));
-      phraseCopiedButton = null;
+    if (flashButton) {
+      flashButton.classList.remove('is-copied');
+      flashButton.innerHTML = flashButtonIcon;
+      flashButton.title = flashButtonLabel;
+      flashButton.setAttribute('aria-label', flashButtonLabel);
+      flashButton = null;
+      flashButtonIcon = '';
+      flashButtonLabel = '';
     }
   }
 
-  function showPhraseCopied(button) {
+  function flashButtonDone(button, doneLabel, restoreIcon, restoreLabel) {
     if (!button) return;
-    resetPhraseCopied();
-    phraseCopiedButton = button;
+    resetButtonFlash();
+    flashButton = button;
+    flashButtonIcon = restoreIcon;
+    flashButtonLabel = restoreLabel;
     button.classList.add('is-copied');
     button.innerHTML = PHRASE_CHECK_ICON;
-    button.title = t('popupCopied');
-    button.setAttribute('aria-label', t('popupCopied'));
-    phraseCopiedTimer = setTimeout(resetPhraseCopied, 1200);
+    button.title = doneLabel;
+    button.setAttribute('aria-label', doneLabel);
+    flashButtonTimer = setTimeout(resetButtonFlash, 1200);
   }
 
   async function copyCommonPhrase(text, button) {
     try {
       await copyTextToClipboard(text);
-      showPhraseCopied(button);
+      flashButtonDone(button, t('popupCopied'), PHRASE_COPY_ICON, t('commonPhraseCopy'));
     } catch (_) {
       setPhraseStatus(t('popupCopyFailed'), true);
     }
@@ -284,7 +293,12 @@
     if (!recentResultText.trim()) return;
     try {
       await copyTextToClipboard(recentResultText);
-      setCopyStatus(t('popupCopied'));
+      flashButtonDone(
+        document.getElementById('copy-recent'),
+        t('popupCopied'),
+        PHRASE_COPY_ICON,
+        t('popupCopyRecent')
+      );
     } catch (_) {
       setCopyStatus(t('popupCopyFailed'), true);
     }

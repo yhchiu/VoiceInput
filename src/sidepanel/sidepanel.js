@@ -680,7 +680,12 @@
     if (!recentResultText.trim()) return;
     try {
       await copyTextToClipboard(recentResultText);
-      setCopyStatus(t('popupCopied'));
+      flashButtonDone(
+        document.getElementById('copy-recent'),
+        t('popupCopied'),
+        PHRASE_COPY_ICON,
+        t('popupCopyRecent')
+      );
     } catch (_) {
       setCopyStatus(t('popupCopyFailed'), true);
     }

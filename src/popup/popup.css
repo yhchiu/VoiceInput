@@ -108,6 +108,11 @@ button.warn:hover { background: #b91c1c; }
   outline: none;
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
 }
+.icon-button.is-copied,
+.icon-button.is-copied:hover {
+  color: #16a34a;
+  background: #f0fdf4;
+}
 .recent-result-text {
   flex: 1 1 auto;
   min-width: 0;
