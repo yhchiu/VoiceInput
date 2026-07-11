@@ -15,6 +15,28 @@ It uses the browser Web Speech API. When Chrome returns more than one possible r
 - Saves settings with `chrome.storage.sync`, so they can sync with your Chrome profile.
 - Lets you save common phrases and insert them from the popup or side panel.
 
+## Screenshots
+
+### Extension Popup with Common Phrases
+
+![Extension Popup with Common Phrases](screenshots/01-popup-common-phrases.png)
+
+### Picker with Possible Speech Results
+
+![Picker with Possible Speech Results](screenshots/02-picker-possible-results.png)
+
+### Extension Side Panel
+
+![Extension Side Panel](screenshots/03-side-panel.png)
+
+### Extension Settings
+
+![Extension Settings](screenshots/04-settings.png)
+
+### Text Replacement for Speech Results
+
+![Text Replacement for Speech Results](screenshots/05-text-replacement.png)
+
 ## Install
 
 1. Open `chrome://extensions`.
