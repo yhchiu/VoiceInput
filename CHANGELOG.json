@@ -1,5 +1,21 @@
 [
   {
+    "version": "1.1.2",
+    "date": "2026-07-11",
+    "items": [
+      {
+        "commit": "32d63cebf6bf6bdf762d68c7ff92e080b34f2e2d",
+        "type": "docs",
+        "subject": "docs: add screenshots"
+      },
+      {
+        "commit": "966d6db93705ff16a6876cdad33cb64bca09893c",
+        "type": "feat",
+        "subject": "feat: unify copy-recent success feedback with other copy buttons"
+      }
+    ]
+  },
+  {
     "version": "1.1.1",
     "date": "2026-06-26",
     "items": [
