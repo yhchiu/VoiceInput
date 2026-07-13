@@ -4,6 +4,8 @@ A Chrome extension that lets you type with your voice on web pages.
 
 It uses the browser Web Speech API. When Chrome returns more than one possible result, you can choose the best one before inserting it into the page.
 
+[Available in the Chrome Web Store](https://chromewebstore.google.com/detail/voice-input/bbdknbnjnfiobplkijiklbdndemlohca)
+
 ## Features
 
 - Start or stop voice input with `Ctrl+Shift+Y`.
@@ -38,6 +40,16 @@ It uses the browser Web Speech API. When Chrome returns more than one possible r
 ![Text Replacement for Speech Results](screenshots/05-text-replacement.png)
 
 ## Install
+
+### From Chrome Web Store (Recommended)
+
+Install directly from the Chrome Web Store: [Voice Input](https://chromewebstore.google.com/detail/voice-input/bbdknbnjnfiobplkijiklbdndemlohca)
+
+1. Visit the Chrome Web Store link above
+2. Click "Add to Chrome" button
+3. Confirm the installation when prompted
+
+### From Source
 
 1. Open `chrome://extensions`.
 2. Turn on **Developer mode**.
