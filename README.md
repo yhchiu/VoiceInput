@@ -19,13 +19,13 @@ It uses the browser Web Speech API. When Chrome returns more than one possible r
 
 ## Screenshots
 
-### Extension Popup with Common Phrases
-
-![Extension Popup with Common Phrases](screenshots/01-popup-common-phrases.png)
-
 ### Picker with Possible Speech Results
 
-![Picker with Possible Speech Results](screenshots/02-picker-possible-results.png)
+![Picker with Possible Speech Results](screenshots/01-picker-possible-results.png)
+
+### Extension Popup with Common Phrases
+
+![Extension Popup with Common Phrases](screenshots/02-popup-common-phrases.png)
 
 ### Extension Side Panel
 
