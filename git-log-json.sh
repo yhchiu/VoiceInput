@@ -1,6 +1,46 @@
 #!/bin/sh
 set -eu
 
+# Regenerates CHANGELOG.json from git history.
+#
+# Can be run from anywhere; it works relative to its own location (the
+# repository root).
+#
+# Usage: ./git-log-json.sh [new-version]
+#
+# With a version argument (e.g. ./git-log-json.sh 1.1.3), manifest.json is
+# first updated to that version, so the regenerated changelog lists it as the
+# pending release.
+
+cd "$(dirname -- "$0")"
+
+# Optional version bump before the changelog is regenerated. Chrome manifest
+# versions are 2-4 dot-separated integers, so validate against that.
+if [ "$#" -ge 1 ]; then
+  new_version=$1
+  if ! printf '%s\n' "$new_version" | grep -Eq '^[0-9]+(\.[0-9]+){1,3}$'; then
+    echo "git-log-json.sh: invalid version '$new_version' (expected e.g. 1.1.3)" >&2
+    exit 1
+  fi
+
+  node - "$new_version" <<'NODE'
+const fs = require('fs');
+
+const version = process.argv[2];
+const fileName = 'manifest.json';
+const text = fs.readFileSync(fileName, 'utf8');
+
+// Replace only the version value so the hand-maintained manifest keeps its
+// formatting. "manifest_version" does not match the quoted-key pattern.
+if (!/"version"\s*:\s*"/.test(text)) {
+  throw new Error(`No version field found in ${fileName}`);
+}
+
+fs.writeFileSync(fileName, text.replace(/("version"\s*:\s*")[^"]*(")/, `$1${version}$2`));
+console.log(`${fileName}: version set to ${version}`);
+NODE
+fi
+
 tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/voiceinput-changelog.XXXXXX")
 trap 'rm -rf "$tmp_dir"' EXIT HUP INT TERM
 
