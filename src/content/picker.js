@@ -378,8 +378,8 @@
 
     function position() {
       let x = 16, y = 16;
-      if (anchor && document.contains(anchor)) {
-        const rect = anchor.getBoundingClientRect();
+      const rect = globalThis.viAnchorRect(anchor);
+      if (rect) {
         const panelRect = panel.getBoundingClientRect();
         const ph = panelRect.height || 200;
         const pw = panelRect.width || 320;
@@ -400,9 +400,19 @@
       panel.style.top = y + 'px';
     }
 
+    // The picker deliberately never takes focus, so on a frame-hosted editor the
+    // caret stays inside the frame and its key events never reach the top
+    // window. Listen on every window between the target and the top frame,
+    // otherwise the picker keys do nothing and type into the document instead.
+    const inputWindows = globalThis.viFrameChainWindows(anchor);
+
     function cleanup() {
-      window.removeEventListener('keydown', onKey, true);
-      window.removeEventListener('pointerdown', onOutsidePointer, true);
+      inputWindows.forEach((win) => {
+        try {
+          win.removeEventListener('keydown', onKey, true);
+          win.removeEventListener('pointerdown', onOutsidePointer, true);
+        } catch (_) {}
+      });
       window.removeEventListener('resize', position);
       window.removeEventListener('scroll', position, true);
       try { host.remove(); } catch (_) {}
@@ -410,8 +420,12 @@
 
     if (items.length > 0) setActive(0);
 
-    window.addEventListener('keydown', onKey, true);
-    window.addEventListener('pointerdown', onOutsidePointer, true);
+    inputWindows.forEach((win) => {
+      try {
+        win.addEventListener('keydown', onKey, true);
+        win.addEventListener('pointerdown', onOutsidePointer, true);
+      } catch (_) {}
+    });
     window.addEventListener('resize', position);
     window.addEventListener('scroll', position, true);
 
@@ -476,14 +490,16 @@
     shadow.appendChild(panel);
 
     function position() {
-      if (!anchor || !document.contains(anchor)) {
-        panel.hidden = true;
-        return;
-      }
-
-      const rect = anchor.getBoundingClientRect();
       const vw = window.innerWidth;
       const vh = window.innerHeight;
+      // An off-screen anchor, as Google Docs uses, gives no position to follow.
+      // Fall back to a fixed spot rather than hiding the preview entirely.
+      const rect = globalThis.viAnchorRect(anchor) || {
+        left: Math.max(8, (vw - 320) / 2),
+        top: 64,
+        bottom: 64,
+        width: 320,
+      };
       const targetWidth = Math.max(240, Math.min(480, rect.width || 320, vw - 16));
 
       panel.style.width = targetWidth + 'px';

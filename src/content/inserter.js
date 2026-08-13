@@ -3,7 +3,8 @@
 // same-origin iframe (Google Docs, TinyMCE, and CKEditor all keep the real
 // editable there), so every DOM lookup resolves through the target's own
 // document rather than the top-level one.
-// Exposes globalThis.viInsertText and globalThis.viIsEditable.
+// Exposes globalThis.viInsertText and globalThis.viIsEditable, plus the
+// frame-aware DOM helpers the rest of the content scripts build on.
 (function () {
   const TEXT_INPUT_TYPES = new Set(['text', 'search', 'email', 'url', 'tel', 'password', 'number', '']);
 
@@ -98,6 +99,75 @@
     }
 
     return el || null;
+  }
+
+  function topWindow() {
+    return globalThis;
+  }
+
+  // The window chain from a node's frame up to the top frame. Key and pointer
+  // events raised inside a frame never reach the top window, so UI living in the
+  // top document has to listen on every window along the way.
+  function frameChainWindows(node) {
+    const windows = [];
+    const seen = new Set();
+
+    function add(win) {
+      if (!win || seen.has(win)) return false;
+      seen.add(win);
+      windows.push(win);
+      return true;
+    }
+
+    add(topWindow());
+
+    let win = windowFor(node);
+    while (add(win)) {
+      let frame = null;
+      try { frame = win.frameElement; } catch (_) { break; } // cross-origin parent
+      if (!frame) break;
+      win = (frame.ownerDocument && frame.ownerDocument.defaultView) || null;
+    }
+
+    return windows;
+  }
+
+  // An element's rect translated into the top frame's viewport, so an anchor
+  // inside a same-origin frame can still position UI drawn in the top document.
+  // Returns null when there is no usable position.
+  function anchorRect(node) {
+    if (!isAttached(node)) return null;
+    if (typeof node.getBoundingClientRect !== 'function') return null;
+
+    const top = topWindow();
+    let rect = node.getBoundingClientRect();
+    let win = windowFor(node);
+    const seen = new Set();
+
+    while (win && win !== top && !seen.has(win)) {
+      seen.add(win);
+      let frame = null;
+      try { frame = win.frameElement; } catch (_) { break; }
+      if (!frame || typeof frame.getBoundingClientRect !== 'function') break;
+      const frameRect = frame.getBoundingClientRect();
+      rect = {
+        left: rect.left + frameRect.left,
+        top: rect.top + frameRect.top,
+        right: rect.right + frameRect.left,
+        bottom: rect.bottom + frameRect.top,
+        width: rect.width,
+        height: rect.height,
+      };
+      win = (frame.ownerDocument && frame.ownerDocument.defaultView) || null;
+    }
+
+    // Google Docs parks its input catcher off-screen, so the anchor carries no
+    // position worth using. Callers fall back to a fixed spot instead.
+    const vw = top.innerWidth || 0;
+    const vh = top.innerHeight || 0;
+    if (rect.bottom < 0 || rect.right < 0 || rect.top > vh || rect.left > vw) return null;
+
+    return rect;
   }
 
   function insertIntoNativeInput(target, text, saved) {
@@ -243,4 +313,6 @@
   globalThis.viSelectionFor = selectionFor;
   globalThis.viIsAttached = isAttached;
   globalThis.viIsFrameElement = isFrameElement;
+  globalThis.viFrameChainWindows = frameChainWindows;
+  globalThis.viAnchorRect = anchorRect;
 })();

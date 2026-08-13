@@ -152,7 +152,14 @@ function makeFrameContext() {
     HTMLTextAreaElement: FakeTextAreaElement,
     InputEvent: FakeInputEvent,
     document: topDocument,
+    // inserter.js treats globalThis as the top frame's window, which it is in a
+    // content script.
+    innerWidth: 1280,
+    innerHeight: 800,
   });
+  // topDocument deliberately has no defaultView: in the page, the top
+  // document's defaultView is the same object inserter.js sees as globalThis.
+  const isTopWindow = (win) => !!win && win.innerWidth === 1280;
 
   function addToFrame(element) {
     element.ownerDocument = frameDocument;
@@ -177,6 +184,7 @@ function makeFrameContext() {
     topDocument,
     frameDocument,
     frameWindow,
+    isTopWindow,
     topAttached,
     addToFrame,
     makeIframe,
@@ -429,6 +437,82 @@ test('viInsertText falls through when the frame cannot build a clipboard event',
   assert.equal(result.ok, true);
   assert.equal(events.length, 0);
   assert.deepEqual(harness.frameDocument.execCommandCalls, [{ command: 'insertText', value: 'hello' }]);
+});
+
+test('viFrameChainWindows lists the top window and every frame window above the target', () => {
+  const harness = makeFrameContext();
+  const { textbox } = harness.makeDocsTextEventTarget();
+
+  const windows = harness.context.viFrameChainWindows(textbox);
+
+  assert.equal(windows.length, 2);
+  assert.equal(harness.isTopWindow(windows[0]), true);
+  assert.equal(windows[1], harness.frameWindow);
+});
+
+test('viFrameChainWindows returns the top window only for a top-level target', () => {
+  const harness = makeFrameContext();
+  const input = new FakeInputElement('text', 'abc');
+
+  const windows = harness.context.viFrameChainWindows(input);
+
+  // Listing the top window twice would run every picker key handler twice.
+  assert.equal(windows.length, 1);
+  assert.equal(harness.isTopWindow(windows[0]), true);
+});
+
+test('viFrameChainWindows stops at a cross-origin parent without repeating a window', () => {
+  const harness = makeFrameContext();
+  const textbox = harness.addToFrame({ isContentEditable: true });
+  Object.defineProperty(harness.frameWindow, 'frameElement', {
+    get() {
+      throw new Error('blocked a frame with origin ...');
+    },
+  });
+
+  const windows = harness.context.viFrameChainWindows(textbox);
+
+  assert.equal(windows.length, 2);
+  assert.equal(harness.isTopWindow(windows[0]), true);
+  assert.equal(windows[1], harness.frameWindow);
+});
+
+test('viAnchorRect translates a frame-local rect into top frame coordinates', () => {
+  const harness = makeFrameContext();
+  const textbox = harness.addToFrame({
+    isContentEditable: true,
+    getBoundingClientRect: () => ({ left: 10, top: 20, right: 110, bottom: 40, width: 100, height: 20 }),
+  });
+  harness.frameWindow.frameElement = harness.makeIframe(harness.frameDocument, 'editor-frame');
+  harness.frameWindow.frameElement.getBoundingClientRect =
+    () => ({ left: 200, top: 300, right: 700, bottom: 700, width: 500, height: 400 });
+
+  const rect = harness.context.viAnchorRect(textbox);
+
+  assert.equal(rect.left, 210);
+  assert.equal(rect.top, 320);
+  assert.equal(rect.bottom, 340);
+  assert.equal(rect.width, 100);
+});
+
+test('viAnchorRect returns null for an off-screen anchor such as the Google Docs frame', () => {
+  const harness = makeFrameContext();
+  const { textbox } = harness.makeDocsTextEventTarget();
+  textbox.getBoundingClientRect = () => ({ left: 0, top: 0, right: 1, bottom: 1, width: 1, height: 1 });
+  // Google Docs parks the input catcher above the viewport.
+  harness.frameWindow.frameElement.getBoundingClientRect =
+    () => ({ left: 0, top: -10000, right: 1, bottom: -9999, width: 1, height: 1 });
+
+  assert.equal(harness.context.viAnchorRect(textbox), null);
+});
+
+test('viAnchorRect returns null for a detached or rect-less anchor', () => {
+  const harness = makeFrameContext();
+  const detached = { isContentEditable: true, getBoundingClientRect: () => ({}) };
+  const rectless = harness.addToFrame({ isContentEditable: true });
+
+  assert.equal(harness.context.viAnchorRect(detached), null);
+  assert.equal(harness.context.viAnchorRect(rectless), null);
 });
 
 test('viIsNativeTextInput recognizes inputs built by another frame realm', () => {
