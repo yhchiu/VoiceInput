@@ -47,6 +47,29 @@ function defineInputClasses() {
 
 const { InputElement: FakeInputElement, TextAreaElement: FakeTextAreaElement } = defineInputClasses();
 
+class FakeDataTransfer {
+  constructor() {
+    this.data = new Map();
+  }
+
+  setData(type, value) {
+    this.data.set(type, value);
+  }
+
+  getData(type) {
+    return this.data.get(type);
+  }
+}
+
+class FakeClipboardEvent {
+  constructor(type, options = {}) {
+    this.type = type;
+    this.bubbles = options.bubbles;
+    this.cancelable = options.cancelable;
+    this.clipboardData = options.clipboardData;
+  }
+}
+
 function makeContext() {
   const attached = new Set();
   const context = loadClassicScript('src/content/inserter.js', {
@@ -97,6 +120,9 @@ function makeFrameContext() {
     HTMLInputElement: FrameInputElement,
     HTMLTextAreaElement: FrameTextAreaElement,
     InputEvent: FakeInputEvent,
+    DataTransfer: FakeDataTransfer,
+    ClipboardEvent: FakeClipboardEvent,
+    frameElement: null,
     getSelection() {
       return frameSelection;
     },
@@ -134,9 +160,10 @@ function makeFrameContext() {
     return element;
   }
 
-  function makeIframe(contentDocument) {
+  function makeIframe(contentDocument, className = '') {
     const iframe = {
       tagName: 'IFRAME',
+      className,
       isContentEditable: false,
       ownerDocument: topDocument,
       contentDocument,
@@ -149,6 +176,7 @@ function makeFrameContext() {
     context,
     topDocument,
     frameDocument,
+    frameWindow,
     topAttached,
     addToFrame,
     makeIframe,
@@ -156,6 +184,30 @@ function makeFrameContext() {
     FrameTextAreaElement,
     setFrameSelection(selection) {
       frameSelection = selection;
+    },
+    // Reproduces the Google Docs editing surface: an always-empty
+    // contenteditable inside the hidden text-event-target frame.
+    makeDocsTextEventTarget() {
+      const events = [];
+      const textbox = addToFrame({
+        tagName: 'DIV',
+        isContentEditable: true,
+        role: 'textbox',
+        innerHTML: '',
+        focused: false,
+        focus() {
+          this.focused = true;
+        },
+        dispatchEvent(event) {
+          events.push(event);
+          return true;
+        },
+      });
+      frameWindow.frameElement = makeIframe(
+        frameDocument,
+        'docs-texteventtarget-iframe docs-offscreen-z-index docs-texteventtarget-iframe-negative-top'
+      );
+      return { textbox, events };
     },
   };
 }
@@ -322,6 +374,61 @@ test('viInsertText falls back to a range built from the frame document', () => {
   assert.equal(harness.frameDocument.createdNodes.length, 1);
   assert.equal(events.length, 1);
   assert.equal(events[0].inputType, 'insertText');
+});
+
+test('viInsertText pastes into the Google Docs text event target', () => {
+  const harness = makeFrameContext();
+  const { textbox, events } = harness.makeDocsTextEventTarget();
+
+  const result = harness.context.viInsertText(textbox, '語音輸入', null);
+
+  assert.equal(result.ok, true);
+  assert.equal(textbox.focused, true);
+  assert.equal(events.length, 1);
+  assert.equal(events[0].type, 'paste');
+  assert.equal(events[0].bubbles, true);
+  assert.equal(events[0].cancelable, true);
+  assert.equal(events[0].clipboardData.getData('text/plain'), '語音輸入');
+});
+
+test('viInsertText does not touch execCommand on the Google Docs surface', () => {
+  const harness = makeFrameContext();
+  const { textbox } = harness.makeDocsTextEventTarget();
+  // The empty contenteditable makes execCommand report false, and the range
+  // fallback would insert into a node Google Docs never reads.
+  harness.frameDocument.execCommand = () => {
+    throw new Error('execCommand must not be used on the Google Docs surface');
+  };
+
+  assert.equal(harness.context.viInsertText(textbox, 'hello', null).ok, true);
+  assert.equal(harness.frameDocument.createdNodes.length, 0);
+});
+
+test('viInsertText keeps using execCommand for an ordinary frame editor', () => {
+  const harness = makeFrameContext();
+  const { textbox, events } = harness.makeDocsTextEventTarget();
+  // Same frame shape, but not the Google Docs input catcher.
+  harness.frameWindow.frameElement.className = 'tinymce-editor';
+
+  const result = harness.context.viInsertText(textbox, 'hello', null);
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(harness.frameDocument.execCommandCalls, [{ command: 'insertText', value: 'hello' }]);
+  assert.equal(events.length, 0);
+});
+
+test('viInsertText falls through when the frame cannot build a clipboard event', () => {
+  const harness = makeFrameContext();
+  const { textbox, events } = harness.makeDocsTextEventTarget();
+  harness.frameWindow.DataTransfer = undefined;
+  harness.frameWindow.ClipboardEvent = undefined;
+
+  const result = harness.context.viInsertText(textbox, 'hello', null);
+
+  // No paste was dispatched, so the ordinary path runs and cannot double up.
+  assert.equal(result.ok, true);
+  assert.equal(events.length, 0);
+  assert.deepEqual(harness.frameDocument.execCommandCalls, [{ command: 'insertText', value: 'hello' }]);
 });
 
 test('viIsNativeTextInput recognizes inputs built by another frame realm', () => {

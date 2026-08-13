@@ -136,7 +136,55 @@
     return { ok: true };
   }
 
+  // Google Docs renders the document to a canvas and keeps the caret in an
+  // always-empty contenteditable inside a hidden frame, purely to receive input
+  // events. Because that element holds no text, execCommand('insertText')
+  // reports false and a synthetic beforeinput is ignored. Its paste handler
+  // reads clipboardData and applies the text to the real model, and that is the
+  // one entry point a page script can reach.
+  function isDocsTextEventTarget(node) {
+    const win = windowFor(node);
+    let frame = null;
+    try {
+      frame = win && win.frameElement;
+    } catch (_) {
+      return false; // cross-origin parent
+    }
+    if (!frame) return false;
+    const className = typeof frame.className === 'string' ? frame.className : '';
+    return className.indexOf('docs-texteventtarget-iframe') !== -1;
+  }
+
+  function insertViaSyntheticPaste(target, text) {
+    const win = windowFor(target);
+    const DataTransferCtor = (win && win.DataTransfer) || globalThis.DataTransfer;
+    const ClipboardEventCtor = (win && win.ClipboardEvent) || globalThis.ClipboardEvent;
+    if (!DataTransferCtor || !ClipboardEventCtor) return { ok: false, reason: 'no-clipboard-event' };
+
+    let clipboardData;
+    try {
+      clipboardData = new DataTransferCtor();
+      clipboardData.setData('text/plain', text);
+    } catch (_) {
+      return { ok: false, reason: 'no-clipboard-event' };
+    }
+
+    target.focus();
+    target.dispatchEvent(new ClipboardEventCtor('paste', {
+      bubbles: true,
+      cancelable: true,
+      clipboardData,
+    }));
+    return { ok: true };
+  }
+
   function insertIntoContentEditable(target, text, saved) {
+    if (isDocsTextEventTarget(target)) {
+      const pasted = insertViaSyntheticPaste(target, text);
+      // Only a dispatched paste returns ok, so falling through cannot double up.
+      if (pasted.ok) return pasted;
+    }
+
     target.focus();
     const doc = documentFor(target);
     const sel = selectionFor(target);
