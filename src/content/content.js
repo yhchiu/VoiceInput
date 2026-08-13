@@ -21,13 +21,15 @@
   // === focus tracking ===
   function captureSelection(el) {
     if (!el) return null;
-    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+    if (globalThis.viIsNativeTextInput(el)) {
       const start = typeof el.selectionStart === 'number' ? el.selectionStart : (el.value || '').length;
       const end = typeof el.selectionEnd === 'number' ? el.selectionEnd : start;
       return { start, end };
     }
     if (el.isContentEditable) {
-      const sel = window.getSelection();
+      // Read the selection from the target's own document; a frame-hosted
+      // editor keeps its caret outside the top-level selection.
+      const sel = globalThis.viSelectionFor(el);
       if (sel && sel.rangeCount) {
         try { return { range: sel.getRangeAt(0).cloneRange() }; } catch (_) {}
       }
@@ -55,8 +57,18 @@
   }
 
   function rememberEditableTargetSoon(el) {
-    if (!rememberEditableTarget(el)) return;
-    setTimeout(() => { rememberEditableTarget(el, false); }, 0);
+    const remembered = rememberEditableTarget(el);
+    setTimeout(() => {
+      // A click on a frame-hosted editor lands on the host element, not on the
+      // editable itself, so re-read the real focus target once the browser has
+      // settled focus. This is also when a plain field's caret becomes final.
+      const active = globalThis.viDeepActiveElement();
+      if (globalThis.viIsEditable(active)) {
+        rememberEditableTarget(active, !remembered);
+      } else if (remembered) {
+        rememberEditableTarget(el, false);
+      }
+    }, 0);
   }
 
   document.addEventListener('focusin', (e) => {
@@ -72,20 +84,20 @@
   }, true);
 
   document.addEventListener('selectionchange', () => {
-    if (!lastTarget || !document.contains(lastTarget)) return;
-    if (lastTarget !== document.activeElement) return;
+    if (!lastTarget || !globalThis.viIsAttached(lastTarget)) return;
+    if (lastTarget !== globalThis.viDeepActiveElement()) return;
     const next = captureSelection(lastTarget);
     if (next) lastSelection = next;
   });
 
   function captureForRecognition() {
-    const active = document.activeElement;
+    const active = globalThis.viDeepActiveElement();
     if (globalThis.viIsEditable(active)) {
       lastTarget = active;
       lastSelection = captureSelection(active);
       return true;
     }
-    if (lastTarget && document.contains(lastTarget) && globalThis.viIsEditable(lastTarget)) {
+    if (lastTarget && globalThis.viIsAttached(lastTarget) && globalThis.viIsEditable(lastTarget)) {
       return true;
     }
     return false;
@@ -119,7 +131,7 @@
   }
 
   function updateInterimPreview(text) {
-    if (!activeInterimPreview && lastTarget && document.contains(lastTarget)) {
+    if (!activeInterimPreview && lastTarget && globalThis.viIsAttached(lastTarget)) {
       activeInterimPreview = globalThis.viMakeInterimPreview(lastTarget, t('interimPreviewTitle'));
     }
     if (activeInterimPreview) {
@@ -179,7 +191,7 @@
   // === Insertion ===
   function performInsertion(text, options = {}) {
     if (options.rememberRecent !== false) rememberRecentResult(text);
-    if (!lastTarget || !document.contains(lastTarget)) {
+    if (!lastTarget || !globalThis.viIsAttached(lastTarget)) {
       globalThis.viMakeToast(t('pickerTargetGone'));
       return { ok: false, error: 'no-target' };
     }
