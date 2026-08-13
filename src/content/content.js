@@ -90,6 +90,22 @@
     if (next) lastSelection = next;
   });
 
+  // Page focus is often idle when recognition starts, because opening the popup
+  // or the side panel takes focus away from the page. Reusing the remembered
+  // field is right in that case. It is wrong when focus sits inside a frame we
+  // could not enter, or in a different document: the user has moved on, and the
+  // remembered field belongs to another part of the page. Google Docs is what
+  // made this visible. Its title bar is a real input, so once the title had been
+  // touched, dictation aimed at the document body landed silently in the title.
+  function canReuseRememberedTarget(active) {
+    if (!lastTarget) return false;
+    if (!globalThis.viIsAttached(lastTarget)) return false;
+    if (!globalThis.viIsEditable(lastTarget)) return false;
+    if (!active || active === lastTarget) return true;
+    if (globalThis.viIsFrameElement(active)) return false;
+    return globalThis.viDocumentFor(active) === globalThis.viDocumentFor(lastTarget);
+  }
+
   function captureForRecognition() {
     const active = globalThis.viDeepActiveElement();
     if (globalThis.viIsEditable(active)) {
@@ -97,10 +113,7 @@
       lastSelection = captureSelection(active);
       return true;
     }
-    if (lastTarget && globalThis.viIsAttached(lastTarget) && globalThis.viIsEditable(lastTarget)) {
-      return true;
-    }
-    return false;
+    return canReuseRememberedTarget(active);
   }
 
   // === UI helpers ===

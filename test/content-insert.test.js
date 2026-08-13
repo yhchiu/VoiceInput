@@ -14,11 +14,15 @@ class FakeInputElement {
 
 class FakeTextAreaElement extends FakeInputElement {}
 
-function loadContent(activeElement) {
+const topDocument = 'top-document';
+
+function loadContent(initialActiveElement) {
   let messageListener = null;
+  let activeElement = initialActiveElement;
   const sentMessages = [];
   const inserted = [];
   const toasts = [];
+  const listeners = new Map();
   const context = createContext({
     HTMLInputElement: FakeInputElement,
     HTMLTextAreaElement: FakeTextAreaElement,
@@ -28,8 +32,12 @@ function loadContent(activeElement) {
       },
     },
     document: {
-      activeElement,
-      addEventListener() {},
+      get activeElement() {
+        return activeElement;
+      },
+      addEventListener(type, listener) {
+        listeners.set(type, listener);
+      },
       contains(element) {
         return !!element && element !== 'detached';
       },
@@ -65,6 +73,12 @@ function loadContent(activeElement) {
     viSelectionFor() {
       return null;
     },
+    viIsFrameElement(element) {
+      return !!(element && element.frame);
+    },
+    viDocumentFor(element) {
+      return (element && element.ownerDocument) || topDocument;
+    },
     viInsertText(target, text, saved) {
       inserted.push({ target, text, saved });
       return { ok: true };
@@ -85,6 +99,16 @@ function loadContent(activeElement) {
     sentMessages,
     inserted,
     toasts,
+    // Drive the listeners content.js registered, so the harness can move focus
+    // the same way the browser would.
+    focus(element) {
+      activeElement = element;
+      const focusin = listeners.get('focusin');
+      if (focusin) focusin({ target: element });
+    },
+    blurToPage(element) {
+      activeElement = element;
+    },
   };
 }
 
@@ -111,6 +135,73 @@ test('content INSERT_TEXT inserts into the current editable target without savin
   assert.equal(harness.inserted[0].saved.start, 2);
   assert.equal(harness.inserted[0].saved.end, 4);
   assert.equal(harness.sentMessages.length, 0);
+});
+
+function insertText(harness) {
+  let response;
+  harness.messageListener({
+    target: harness.context.VI_TARGETS.CONTENT,
+    action: harness.context.VI_MSG.INSERT_TEXT,
+    text: 'phrase',
+  }, {}, (value) => {
+    response = value;
+  });
+  return response;
+}
+
+test('content INSERT_TEXT reuses the remembered field while page focus is idle', () => {
+  const input = new FakeInputElement('hello');
+  const harness = loadContent(null);
+  harness.focus(input);
+  // Opening the popup or side panel drops page focus back to the body.
+  harness.blurToPage(null);
+
+  const response = insertText(harness);
+
+  assert.equal(response.ok, true);
+  assert.equal(harness.inserted.length, 1);
+  assert.equal(harness.inserted[0].target, input);
+});
+
+test('content INSERT_TEXT reuses the remembered field when focus moves within the same document', () => {
+  const input = new FakeInputElement('hello');
+  const harness = loadContent(null);
+  harness.focus(input);
+  harness.blurToPage({ editable: false });
+
+  const response = insertText(harness);
+
+  assert.equal(response.ok, true);
+  assert.equal(harness.inserted[0].target, input);
+});
+
+test('content INSERT_TEXT refuses the remembered field when focus is in an unreachable frame', () => {
+  const titleInput = new FakeInputElement('My document');
+  const harness = loadContent(null);
+  harness.focus(titleInput);
+  // The caret is now in the editor body, which lives behind a frame we could
+  // not enter. Writing to the remembered title input would be silent damage.
+  harness.blurToPage({ frame: true, editable: false });
+
+  const response = insertText(harness);
+
+  assert.equal(response.ok, false);
+  assert.equal(response.error, 'no-target');
+  assert.equal(harness.inserted.length, 0);
+  assert.deepEqual(harness.toasts, ['pickerNoTarget']);
+});
+
+test('content INSERT_TEXT refuses the remembered field when focus is in another document', () => {
+  const input = new FakeInputElement('hello');
+  const harness = loadContent(null);
+  harness.focus(input);
+  harness.blurToPage({ editable: false, ownerDocument: 'frame-document' });
+
+  const response = insertText(harness);
+
+  assert.equal(response.ok, false);
+  assert.equal(response.error, 'no-target');
+  assert.equal(harness.inserted.length, 0);
 });
 
 // End-to-end over the real inserter, on the shape Google Docs actually uses:
