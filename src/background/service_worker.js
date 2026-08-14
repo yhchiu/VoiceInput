@@ -344,16 +344,25 @@ async function startContentRecognitionFlow(originTabId) {
   return { ok: true, mode: 'content', sessionId };
 }
 
-async function openSidePanel(tabFrame) {
-  if (!chrome.sidePanel || typeof chrome.sidePanel.open !== 'function' || typeof tabFrame.windowId !== 'number') {
-    return false;
+// Chrome only allows sidePanel.open() while the user gesture that triggered it
+// is still live, and awaiting anything ends that. So this must be called
+// synchronously from the event listener, never after an await. It returns a
+// promise for the outcome, which the caller can await later.
+//
+// It does not check whether Side Panel Mode is on, because that answer only
+// comes from storage, and reading it would cost the very await this avoids. It
+// does not need to: applyRuntimeMode disables the panel whenever the mode is
+// off, so the call simply fails there, and only the Side Panel path looks at
+// the result.
+function openSidePanelNow(tab) {
+  const windowId = tab && typeof tab.windowId === 'number' ? tab.windowId : null;
+  if (!chrome.sidePanel || typeof chrome.sidePanel.open !== 'function' || windowId === null) {
+    return Promise.resolve(false);
   }
   try {
-    await chrome.sidePanel.open({ windowId: tabFrame.windowId });
-    return true;
-  } catch (error) {
-    console.warn('[VoiceInput] Failed to open side panel:', error);
-    return false;
+    return Promise.resolve(chrome.sidePanel.open({ windowId })).then(() => true, () => false);
+  } catch (_) {
+    return Promise.resolve(false);
   }
 }
 
@@ -376,9 +385,10 @@ async function startSidePanelRecognitionFlow(originTabId, options = {}) {
   const tabFrame = await getActiveTabFrame(originTabId);
   if (!tabFrame) return { ok: false, error: 'no-active-tab' };
 
-  // Without the panel there is nowhere for recognition to run, so stop here
-  // rather than building a session that nothing will ever pick up.
-  if (options.openPanel && !(await openSidePanel(tabFrame))) {
+  // The caller opens the panel before its first await, so all that reaches here
+  // is the outcome. Without the panel there is nowhere for recognition to run,
+  // so stop rather than building a session nothing will ever pick up.
+  if (options.panelOpened === false) {
     return { ok: false, error: 'side-panel-unavailable' };
   }
 
@@ -400,7 +410,7 @@ async function startSidePanelRecognitionFlow(originTabId, options = {}) {
   };
   sidePanelPickerId = null;
 
-  if (options.openPanel) {
+  if (options.panelOpened) {
     pendingSidePanelStart = { sessionId, tabId: tabFrame.tabId, frameId: tabFrame.frameId, windowId: tabFrame.windowId };
     if (await sendStartToSidePanel(sessionId)) {
       pendingSidePanelStart = null;
@@ -675,20 +685,30 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   return true;
 });
 
-chrome.commands.onCommand.addListener(async (command) => {
-  if (command !== 'toggle-recognition') return;
+async function runToggleCommand(tab, opening) {
+  const originTabId = tab && typeof tab.id === 'number' ? tab.id : undefined;
 
   // A session that had already ended leaves currentSession set, and treating
   // that as a stop turned the press into a silent no-op: the user pressed to
   // start and had to press again. Fall through to starting instead.
   if (currentSession && (await stopRecognitionFlow())) return;
 
-  const tabFrame = await getActiveTabFrame();
+  const tabFrame = await getActiveTabFrame(originTabId);
   const result = (await getSidePanelModeEnabled())
-    ? await startSidePanelRecognitionFlow(undefined, { openPanel: true })
-    : await startContentRecognitionFlow();
+    ? await startSidePanelRecognitionFlow(originTabId, { panelOpened: await opening })
+    : await startContentRecognitionFlow(originTabId);
 
   await reportCommandResult(tabFrame && tabFrame.tabId, result);
+}
+
+// Deliberately not an async listener. In Side Panel Mode the panel is where
+// recognition runs, so the shortcut has to open it, and sidePanel.open() is
+// only allowed while the triggering gesture is live. Awaiting anything first
+// ends the gesture and the call is rejected, which is why opening happens on
+// the first line and the rest of the work is handed to an async function.
+chrome.commands.onCommand.addListener((command, tab) => {
+  if (command !== 'toggle-recognition') return;
+  runToggleCommand(tab, openSidePanelNow(tab));
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {

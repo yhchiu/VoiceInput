@@ -19,6 +19,7 @@ function loadServiceWorker({
   let messageListener = null;
   let commandListener = null;
   let tabUpdatedListener = null;
+  let gestureAlive = false;
   const sentToTabs = [];
   const injections = [];
   const badges = [];
@@ -77,7 +78,12 @@ function loadServiceWorker({
         setOptions: async () => {},
         setPanelBehavior: async () => {},
         async open() {
-          if (!sidePanelOpens) throw new Error('sidePanel.open() may only be called in response to a user gesture.');
+          // Chrome allows this only while the triggering gesture is live, which
+          // ends the moment the listener yields. See pressShortcut below.
+          if (!gestureAlive) {
+            throw new Error('sidePanel.open() may only be called in response to a user gesture.');
+          }
+          if (!sidePanelOpens) throw new Error('No active side panel for windowId.');
         },
       },
       commands: {
@@ -116,8 +122,18 @@ function loadServiceWorker({
         messageListener(message, {}, resolve);
       });
     },
-    pressShortcut() {
-      return commandListener('toggle-recognition');
+    // The command listener is deliberately synchronous, so it hands back
+    // nothing to await. Everything here settles on the microtask queue, so one
+    // macrotask is enough to let the work it started finish.
+    //
+    // The gesture is modelled the way Chrome ends it: alive for the synchronous
+    // body of the listener, gone as soon as it yields. Anything the listener
+    // awaits before opening the panel therefore misses the window.
+    async pressShortcut() {
+      gestureAlive = true;
+      Promise.resolve().then(() => { gestureAlive = false; });
+      commandListener('toggle-recognition', activeTab ? { ...activeTab } : undefined);
+      await new Promise((resolve) => { setTimeout(resolve, 0); });
     },
     watchesAllTabs() {
       return tabUpdatedListener !== null;
@@ -226,6 +242,17 @@ test('a start refused for having no field says so rather than blaming the page',
   await harness.pressShortcut();
 
   assert.equal(harness.titles.at(-1).title, 'pickerNoTarget');
+});
+
+test('the shortcut opens the side panel while the gesture is still live', async () => {
+  const harness = loadServiceWorker({ sidePanelMode: true, tabReplies: [{ ok: true }] });
+
+  await harness.pressShortcut();
+
+  // Chrome rejects sidePanel.open() once the listener has awaited anything, so
+  // reaching a started session at all proves it was opened on the first line.
+  assert.equal(harness.badges.every((badge) => badge.text === ''), true);
+  assert.equal(harness.titles.every((title) => title.title === 'extName'), true);
 });
 
 test('a side panel that will not open is reported, not passed off as a start', async () => {
