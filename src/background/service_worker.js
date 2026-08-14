@@ -173,26 +173,38 @@ function startFailureMessage(error) {
   if (error === 'no-target') return localizedMessage('pickerNoTarget');
   if (error === 'content-unavailable' || error === 'no-active-tab') return localizedMessage('pageUnavailable');
   if (error === 'side-panel-disabled') return localizedMessage('sidePanelModeDisabled');
+  if (error === 'side-panel-unavailable') return localizedMessage('sidePanelOpenFailed');
   return localizedMessage('errUnknown');
 }
 
+// Scope every mark to a tab when there is one. Failing with no active tab is the
+// one case there is no tab to scope to, and it still deserves to be reported.
+function actionScope(tabId) {
+  return typeof tabId === 'number' ? { tabId } : {};
+}
+
 async function clearStartFailure(tabId) {
-  if (typeof tabId !== 'number') return;
-  await ignoreFailure(chrome.action.setBadgeText({ text: '', tabId }));
-  await ignoreFailure(chrome.action.setTitle({ title: localizedMessage('extName'), tabId }));
+  const scope = actionScope(tabId);
+  await ignoreFailure(chrome.action.setBadgeText({ ...scope, text: '' }));
+  await ignoreFailure(chrome.action.setTitle({ ...scope, title: localizedMessage('extName') }));
+  // An unscoped mark shows on every tab and survives navigation, so clear that
+  // too whenever a start succeeds.
+  if (scope.tabId !== undefined) {
+    await ignoreFailure(chrome.action.setBadgeText({ text: '' }));
+  }
 }
 
 async function reportCommandResult(tabId, result) {
-  if (typeof tabId !== 'number') return;
   if (result && result.ok) {
     await clearStartFailure(tabId);
     return;
   }
-  await ignoreFailure(chrome.action.setBadgeText({ text: FAILURE_BADGE_TEXT, tabId }));
-  await ignoreFailure(chrome.action.setBadgeBackgroundColor({ color: FAILURE_BADGE_COLOR, tabId }));
+  const scope = actionScope(tabId);
+  await ignoreFailure(chrome.action.setBadgeText({ ...scope, text: FAILURE_BADGE_TEXT }));
+  await ignoreFailure(chrome.action.setBadgeBackgroundColor({ ...scope, color: FAILURE_BADGE_COLOR }));
   await ignoreFailure(chrome.action.setTitle({
+    ...scope,
     title: startFailureMessage(result && result.error),
-    tabId,
   }));
 }
 
@@ -364,8 +376,10 @@ async function startSidePanelRecognitionFlow(originTabId, options = {}) {
   const tabFrame = await getActiveTabFrame(originTabId);
   if (!tabFrame) return { ok: false, error: 'no-active-tab' };
 
-  if (options.openPanel) {
-    await openSidePanel(tabFrame);
+  // Without the panel there is nowhere for recognition to run, so stop here
+  // rather than building a session that nothing will ever pick up.
+  if (options.openPanel && !(await openSidePanel(tabFrame))) {
+    return { ok: false, error: 'side-panel-unavailable' };
   }
 
   const prepared = await prepareRecognitionTarget(tabFrame);
@@ -403,20 +417,28 @@ async function startRecognitionFlow(originTabId, options = {}) {
   return startContentRecognitionFlow(originTabId);
 }
 
+// Returns whether a session was actually running. Nothing clears currentSession
+// when a tab navigates away mid-session, so it can outlive the recognition it
+// describes, and a stop aimed at a session that has already gone must not be
+// mistaken for a real one.
 async function stopRecognitionFlow() {
   const sess = currentSession;
   currentSession = null;
   pendingSidePanelStart = null;
-  if (!sess) return;
+  if (!sess) return false;
 
   if (sess.mode === 'sidepanel') {
+    let stopped = false;
     try {
-      await chrome.runtime.sendMessage({
+      const res = await chrome.runtime.sendMessage({
         target: TARGETS.SIDEPANEL,
         action: MSG.STOP_RECOGNITION,
         sessionId: sess.sessionId,
       });
-    } catch (_) {}
+      stopped = !!(res && res.stopped);
+    } catch (_) {
+      // The panel is closed, so nothing was running in it.
+    }
     try {
       await chrome.tabs.sendMessage(
         sess.tabId,
@@ -424,19 +446,20 @@ async function stopRecognitionFlow() {
         { frameId: sess.frameId ?? 0 }
       );
     } catch (_) {}
-    return;
+    return stopped;
   }
 
   try {
-    await chrome.tabs.sendMessage(
+    const res = await chrome.tabs.sendMessage(
       sess.tabId,
-      {
-        target: TARGETS.CONTENT,
-        action: MSG.STOP_RECOGNITION,
-      },
+      { target: TARGETS.CONTENT, action: MSG.STOP_RECOGNITION },
       { frameId: sess.frameId ?? 0 }
     );
-  } catch (_) {}
+    return !!(res && res.stopped);
+  } catch (_) {
+    // The tab is gone or its script was replaced, so nothing was running.
+    return false;
+  }
 }
 
 function isCurrentSidePanelSession(sessionId) {
@@ -654,10 +677,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 chrome.commands.onCommand.addListener(async (command) => {
   if (command !== 'toggle-recognition') return;
-  if (currentSession) {
-    await stopRecognitionFlow();
-    return;
-  }
+
+  // A session that had already ended leaves currentSession set, and treating
+  // that as a stop turned the press into a silent no-op: the user pressed to
+  // start and had to press again. Fall through to starting instead.
+  if (currentSession && (await stopRecognitionFlow())) return;
 
   const tabFrame = await getActiveTabFrame();
   const result = (await getSidePanelModeEnabled())

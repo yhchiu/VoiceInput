@@ -9,7 +9,13 @@ const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, 'manifest.json')
 
 // Loads the service worker the way Chrome does, with just enough of the
 // extension APIs to drive its message handler.
-function loadServiceWorker({ tabReplies = [], injectSucceeds = true, sidePanelMode = false } = {}) {
+function loadServiceWorker({
+  tabReplies = [],
+  injectSucceeds = true,
+  sidePanelMode = false,
+  sidePanelOpens = true,
+  activeTab = { id: 7, windowId: 1 },
+} = {}) {
   let messageListener = null;
   let commandListener = null;
   let tabUpdatedListener = null;
@@ -44,7 +50,7 @@ function loadServiceWorker({ tabReplies = [], injectSucceeds = true, sidePanelMo
           }
           return reply;
         },
-        query: async () => [{ id: 7, windowId: 1 }],
+        query: async () => (activeTab ? [activeTab] : []),
         get: async (id) => ({ id, windowId: 1 }),
         onRemoved: { addListener() {} },
         onUpdated: {
@@ -70,7 +76,9 @@ function loadServiceWorker({ tabReplies = [], injectSucceeds = true, sidePanelMo
       sidePanel: {
         setOptions: async () => {},
         setPanelBehavior: async () => {},
-        open: async () => {},
+        async open() {
+          if (!sidePanelOpens) throw new Error('sidePanel.open() may only be called in response to a user gesture.');
+        },
       },
       commands: {
         onCommand: {
@@ -200,8 +208,11 @@ test('a shortcut start that succeeds leaves no mark', async () => {
 
   await harness.pressShortcut();
 
-  assert.equal(harness.badges.at(-1).text, '');
-  assert.equal(harness.badges.at(-1).tabId, 7);
+  assert.equal(harness.badges.every((badge) => badge.text === ''), true);
+  // The tab's own mark is cleared, and so is any unscoped one, which would
+  // otherwise sit on every tab.
+  assert.ok(harness.badges.some((badge) => badge.tabId === 7));
+  assert.ok(harness.badges.some((badge) => badge.tabId === undefined));
 });
 
 test('a start refused for having no field says so rather than blaming the page', async () => {
@@ -217,20 +228,73 @@ test('a start refused for having no field says so rather than blaming the page',
   assert.equal(harness.titles.at(-1).title, 'pickerNoTarget');
 });
 
-test('every toolbar mark is scoped to a tab', async () => {
+test('a side panel that will not open is reported, not passed off as a start', async () => {
+  const harness = loadServiceWorker({ sidePanelMode: true, sidePanelOpens: false });
+
+  await harness.pressShortcut();
+
+  // The panel is where recognition would have run, so there is nothing left to
+  // start. This used to build a session anyway and answer ok.
+  assert.equal(harness.badges.at(-1).text, '!');
+  assert.equal(harness.titles.at(-1).title, 'sidePanelOpenFailed');
+});
+
+test('a shortcut press starts again when the remembered session had already ended', async () => {
+  const harness = loadServiceWorker({
+    tabReplies: [{ ok: true }, { ok: true, stopped: false }, { ok: true }],
+  });
+
+  await harness.pressShortcut();
+  // Navigating away mid-session leaves currentSession set with nothing running.
+  await harness.pressShortcut();
+
+  assert.deepEqual(harness.sentToTabs.map((sent) => sent.message.action), [
+    'START_RECOGNITION',
+    'STOP_RECOGNITION',
+    'START_RECOGNITION',
+  ]);
+});
+
+test('a shortcut press still stops a session that is really running', async () => {
+  const harness = loadServiceWorker({
+    tabReplies: [{ ok: true }, { ok: true, stopped: true }],
+  });
+
+  await harness.pressShortcut();
+  await harness.pressShortcut();
+
+  assert.deepEqual(harness.sentToTabs.map((sent) => sent.message.action), [
+    'START_RECOGNITION',
+    'STOP_RECOGNITION',
+  ]);
+});
+
+test('a failure with no active tab is still reported', async () => {
+  const harness = loadServiceWorker({ activeTab: null });
+
+  await harness.pressShortcut();
+
+  // There is no tab to scope the mark to, which is no reason to say nothing.
+  assert.equal(harness.badges.at(-1).text, '!');
+  assert.equal(harness.badges.at(-1).tabId, undefined);
+  assert.equal(harness.titles.at(-1).title, 'pageUnavailable');
+});
+
+test('a failure mark is scoped to its tab whenever there is one', async () => {
   // Scoping is what keeps the mark off other tabs, and it is also what retires
-  // it: Chrome drops a tab-scoped badge when that tab navigates. A global badge
-  // would sit on every tab until something cleared it by hand.
-  const failed = loadServiceWorker({ tabReplies: ['unavailable'], injectSucceeds: false });
-  await failed.pressShortcut();
+  // it: Chrome drops a tab-scoped badge when that tab navigates. An unscoped
+  // failure mark would sit on every tab until something cleared it by hand.
+  const harness = loadServiceWorker({ tabReplies: ['unavailable'], injectSucceeds: false });
 
-  const succeeded = loadServiceWorker({ tabReplies: [{ ok: true }] });
-  await succeeded.pressShortcut();
+  await harness.pressShortcut();
 
-  const marks = [...failed.badges, ...failed.titles, ...succeeded.badges, ...succeeded.titles];
+  const marks = [
+    ...harness.badges.filter((badge) => badge.text !== ''),
+    ...harness.titles.filter((title) => title.title !== 'extName'),
+  ];
   assert.ok(marks.length > 0);
   for (const mark of marks) {
-    assert.equal(typeof mark.tabId, 'number', `${JSON.stringify(mark)} is not scoped to a tab`);
+    assert.equal(mark.tabId, 7, `${JSON.stringify(mark)} is not scoped to a tab`);
   }
 });
 

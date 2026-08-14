@@ -405,10 +405,14 @@
         sendResponse({ ok: true });
         return false;
 
-      case MSG.STOP_RECOGNITION:
+      case MSG.STOP_RECOGNITION: {
+        // Report whether anything was actually running, so the background can
+        // tell a real stop from one aimed at a session that had already gone.
+        const stopped = !!activeRecognizer || !!activeSessionId;
         endSession();
-        sendResponse({ ok: true });
+        sendResponse({ ok: true, stopped });
         return false;
+      }
 
       case MSG.INSERT_TEXT: {
         if (!captureForRecognition()) {

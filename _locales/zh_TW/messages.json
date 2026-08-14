@@ -126,6 +126,7 @@
   "popupHint": { "message": "提示：請先將焦點停在輸入欄，再按快捷鍵。" },
   "sidePanelHint": { "message": "提示：請先將焦點停在網頁輸入欄，再回到此側邊面板開始辨識。" },
   "sidePanelModeDisabled": { "message": "側邊面板模式尚未開啟，請先至設定啟用。" },
+  "sidePanelOpenFailed": { "message": "無法開啟側邊面板。請改點擊擴充功能圖示。" },
   "pageUnavailable": { "message": "無法在這個頁面使用語音輸入。如果這是一般網頁，請重新整理後再試一次。" },
   "sidePanelMicPermissionPrompt": { "message": "請允許此擴充功能使用麥克風。" },
   "sidePanelMicPermissionOpened": { "message": "已開啟麥克風授權分頁。請在該分頁授權後，回到側邊面板再次開始辨識。" },

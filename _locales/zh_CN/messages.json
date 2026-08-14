@@ -126,6 +126,7 @@
   "popupHint": { "message": "提示：请先将焦点停在输入栏，再按快捷键。" },
   "sidePanelHint": { "message": "提示：请先将焦点停在网页输入栏，再回到此侧边面板开始识别。" },
   "sidePanelModeDisabled": { "message": "侧边面板模式尚未开启，请先到设置启用。" },
+  "sidePanelOpenFailed": { "message": "无法打开侧边栏。请改点击扩展图标。" },
   "pageUnavailable": { "message": "无法在这个页面使用语音输入。如果这是普通网页，请刷新后再试一次。" },
   "sidePanelMicPermissionPrompt": { "message": "请允许此扩展使用麦克风。" },
   "sidePanelMicPermissionOpened": { "message": "已打开麦克风授权标签页。请在该标签页授权后，回到侧边面板再次开始识别。" },
