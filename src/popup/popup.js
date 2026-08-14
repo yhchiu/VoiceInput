@@ -113,6 +113,20 @@
     }, 1500);
   }
 
+  function startErrorMessage(error) {
+    if (error === 'no-target') return t('pickerNoTarget');
+    if (error === 'content-unavailable' || error === 'no-active-tab') return t('pageUnavailable');
+    if (error === 'side-panel-disabled') return t('sidePanelModeDisabled');
+    return t('errUnknown');
+  }
+
+  function setStartStatus(message) {
+    const status = document.getElementById('start-status');
+    status.textContent = message;
+    status.hidden = !message;
+    status.classList.toggle('is-error', !!message);
+  }
+
   function setPhraseStatus(message, isError = false) {
     const status = document.getElementById('phrase-status');
     status.textContent = message;
@@ -311,11 +325,27 @@
     await refreshStatus();
 
     document.getElementById('start').addEventListener('click', async () => {
-      await chrome.runtime.sendMessage({
-        target: TARGETS.BACKGROUND,
-        action: listening ? MSG.STOP_RECOGNITION : MSG.START_RECOGNITION,
-      });
-      window.close();
+      const stopping = listening;
+      setStartStatus('');
+
+      let res = null;
+      try {
+        res = await chrome.runtime.sendMessage({
+          target: TARGETS.BACKGROUND,
+          action: stopping ? MSG.STOP_RECOGNITION : MSG.START_RECOGNITION,
+        });
+      } catch (_) {}
+
+      // Closing on a failed start hid the reason and left the user waiting to
+      // speak into a session that never began. Stopping is best effort, so it
+      // still closes either way.
+      if (stopping || (res && res.ok !== false)) {
+        window.close();
+        return;
+      }
+
+      setStartStatus(startErrorMessage(res && res.error));
+      await refreshStatus();
     });
 
     document.getElementById('lang').addEventListener('change', async (e) => {

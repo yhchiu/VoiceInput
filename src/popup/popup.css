@@ -137,6 +137,11 @@ button.warn:hover { background: #b91c1c; }
   color: #b91c1c;
 }
 .copy-status[hidden] { display: none; }
+.start-status {
+  margin-bottom: 4px;
+  white-space: pre-line;
+  line-height: 1.45;
+}
 .toggle-row {
   box-sizing: border-box;
   margin-bottom: 10px;

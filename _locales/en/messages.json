@@ -126,7 +126,7 @@
   "popupHint": { "message": "Tip: focus a field first, then press the shortcut." },
   "sidePanelHint": { "message": "Tip: focus a field on the page, then return to this side panel to start recognition." },
   "sidePanelModeDisabled": { "message": "Side Panel Mode is not enabled. Enable it in settings first." },
-  "sidePanelPageUnavailable": { "message": "Voice input is not available on the current page." },
+  "pageUnavailable": { "message": "Voice input is not available on this page. If it is a normal web page, reload it and try again." },
   "sidePanelMicPermissionPrompt": { "message": "Allow microphone access for this extension." },
   "sidePanelMicPermissionOpened": { "message": "A microphone permission tab was opened. Grant access there, then return here and start recognition again." },
   "sidePanelScratchpad": { "message": "Scratchpad" },

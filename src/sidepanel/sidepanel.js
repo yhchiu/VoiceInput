@@ -745,7 +745,7 @@
   function startErrorMessage(error) {
     if (error === 'side-panel-disabled') return t('sidePanelModeDisabled');
     if (error === 'no-target') return t('pickerNoTarget');
-    if (error === 'content-unavailable' || error === 'no-active-tab') return t('sidePanelPageUnavailable');
+    if (error === 'content-unavailable' || error === 'no-active-tab') return t('pageUnavailable');
     return t('errUnknown');
   }
 
