@@ -165,30 +165,75 @@ async function getActiveTabFrame(originTabId) {
   return null;
 }
 
-async function prepareRecognitionTarget(tabFrame) {
+// Reloading or updating the extension orphans the content scripts in tabs that
+// were already open, and Chrome never re-injects them. Every message to such a
+// tab fails until the user reloads it, with nothing to tell them why. Inject the
+// scripts on demand instead, so the tab recovers on its own.
+function contentScriptFiles() {
   try {
-    const res = await chrome.tabs.sendMessage(
-      tabFrame.tabId,
-      { target: TARGETS.CONTENT, action: MSG.PREPARE_RECOGNITION_TARGET },
-      { frameId: tabFrame.frameId }
-    );
-    return res && res.ok ? { ok: true } : { ok: false, error: (res && res.error) || 'no-target' };
+    const scripts = chrome.runtime.getManifest().content_scripts;
+    return (scripts && scripts[0] && scripts[0].js) || [];
   } catch (_) {
-    return { ok: false, error: 'content-unavailable' };
+    return [];
   }
+}
+
+async function injectContentScripts(tabId, frameId) {
+  const files = contentScriptFiles();
+  if (!files.length || !chrome.scripting) return false;
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId, frameIds: [frameId] },
+      files,
+    });
+    return true;
+  } catch (_) {
+    // A restricted page, or no host access for this tab. Nothing to recover.
+    return false;
+  }
+}
+
+// Delivers a message to a tab's content script, injecting it once and retrying
+// if nothing answered. `delivered` says whether the content script replied at
+// all, which is separate from whether it could carry out the request.
+async function deliverToContent(tabId, frameId, message) {
+  const options = { frameId: typeof frameId === 'number' ? frameId : 0 };
+
+  try {
+    return { delivered: true, response: await chrome.tabs.sendMessage(tabId, message, options) };
+  } catch (_) {}
+
+  if (!(await injectContentScripts(tabId, options.frameId))) {
+    return { delivered: false, response: null };
+  }
+
+  try {
+    return { delivered: true, response: await chrome.tabs.sendMessage(tabId, message, options) };
+  } catch (_) {
+    return { delivered: false, response: null };
+  }
+}
+
+async function prepareRecognitionTarget(tabFrame) {
+  const { delivered, response } = await deliverToContent(
+    tabFrame.tabId,
+    tabFrame.frameId,
+    { target: TARGETS.CONTENT, action: MSG.PREPARE_RECOGNITION_TARGET }
+  );
+  if (!delivered) return { ok: false, error: 'content-unavailable' };
+  return response && response.ok
+    ? { ok: true }
+    : { ok: false, error: (response && response.error) || 'no-target' };
 }
 
 async function sendToContentTarget(target, action, payload = {}) {
   if (!target) return { ok: false, error: 'no-session' };
-  try {
-    return await chrome.tabs.sendMessage(
-      target.tabId,
-      { target: TARGETS.CONTENT, action, ...payload },
-      { frameId: target.frameId ?? 0 }
-    );
-  } catch (_) {
-    return { ok: false, error: 'content-unavailable' };
-  }
+  const { delivered, response } = await deliverToContent(
+    target.tabId,
+    target.frameId,
+    { target: TARGETS.CONTENT, action, ...payload }
+  );
+  return delivered ? response : { ok: false, error: 'content-unavailable' };
 }
 
 async function sendToSessionContent(action, payload = {}) {
@@ -227,21 +272,16 @@ async function startContentRecognitionFlow(originTabId) {
     sessionId,
   };
 
-  try {
-    await chrome.tabs.sendMessage(
-      tabFrame.tabId,
-      {
-        target: TARGETS.CONTENT,
-        action: MSG.START_RECOGNITION,
-        sessionId,
-      },
-      { frameId: tabFrame.frameId }
-    );
-    return { ok: true, mode: 'content', sessionId };
-  } catch (_) {
+  const { delivered } = await deliverToContent(
+    tabFrame.tabId,
+    tabFrame.frameId,
+    { target: TARGETS.CONTENT, action: MSG.START_RECOGNITION, sessionId }
+  );
+  if (!delivered) {
     currentSession = null;
     return { ok: false, error: 'content-unavailable' };
   }
+  return { ok: true, mode: 'content', sessionId };
 }
 
 async function openSidePanel(tabFrame) {

@@ -7,7 +7,7 @@
   "background": {
     "service_worker": "src/background/service_worker.js"
   },
-  "permissions": ["storage", "activeTab", "sidePanel"],
+  "permissions": ["storage", "activeTab", "sidePanel", "scripting"],
   "action": {
     "default_popup": "src/popup/popup.html",
     "default_icon": {

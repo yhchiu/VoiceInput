@@ -91,19 +91,30 @@
     }, 0);
   }
 
-  document.addEventListener('focusin', (e) => {
+  // Recorded so a later instance can stand this one down. A re-injected content
+  // script shares this isolated world with whatever is already here, including
+  // an instance orphaned by an extension reload, and two instances handling the
+  // same events would double every action.
+  const documentListeners = [];
+
+  function listenOnDocument(type, handler, capture) {
+    document.addEventListener(type, handler, capture);
+    documentListeners.push([type, handler, capture]);
+  }
+
+  listenOnDocument('focusin', (e) => {
     rememberEditableTarget(e.target);
   }, true);
 
-  document.addEventListener('pointerdown', (e) => {
+  listenOnDocument('pointerdown', (e) => {
     rememberEditableTargetSoon(e.target);
   }, true);
 
-  document.addEventListener('pointerup', (e) => {
+  listenOnDocument('pointerup', (e) => {
     rememberEditableTargetSoon(e.target);
   }, true);
 
-  document.addEventListener('selectionchange', () => {
+  listenOnDocument('selectionchange', () => {
     if (!lastTarget || !globalThis.viIsAttached(lastTarget)) return;
     if (lastTarget !== globalThis.viDeepActiveElement()) return;
     const next = captureSelection(lastTarget);
@@ -385,7 +396,7 @@
   }
 
   // === Message handler ===
-  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  function handleMessage(msg, sender, sendResponse) {
     if (!msg || msg.target !== TARGETS.CONTENT) return false;
 
     switch (msg.action) {
@@ -455,5 +466,26 @@
         sendResponse({ ok: false, error: 'unknown-action' });
         return false;
     }
-  });
+  }
+
+  function teardown() {
+    documentListeners.forEach(([type, handler, capture]) => {
+      try { document.removeEventListener(type, handler, capture); } catch (_) {}
+    });
+    documentListeners.length = 0;
+    try { chrome.runtime.onMessage.removeListener(handleMessage); } catch (_) {}
+    disposePicker();
+    disposeListening();
+    disposeInterimPreview();
+  }
+
+  // Stand down whatever instance is already in this isolated world before taking
+  // over. The background re-injects this script into tabs whose instance was
+  // orphaned by an extension reload, and that orphan still holds page listeners.
+  if (typeof globalThis.viTeardownContent === 'function') {
+    try { globalThis.viTeardownContent(); } catch (_) {}
+  }
+  globalThis.viTeardownContent = teardown;
+
+  chrome.runtime.onMessage.addListener(handleMessage);
 })();

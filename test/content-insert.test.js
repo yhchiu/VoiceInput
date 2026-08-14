@@ -169,6 +169,65 @@ test('content contains a send that throws after the liveness check passes', () =
   assert.equal(harness.sentMessages.length, 0);
 });
 
+test('a re-injected content script stands the previous instance down', () => {
+  const documentListeners = new Set();
+  const messageListeners = new Set();
+  const context = createContext({
+    HTMLInputElement: FakeInputElement,
+    HTMLTextAreaElement: FakeTextAreaElement,
+    window: { getSelection: () => null },
+    document: {
+      activeElement: null,
+      addEventListener(type, handler, capture) {
+        documentListeners.add(`${type}:${documentListeners.size}`);
+        this.handlers = this.handlers || [];
+        this.handlers.push({ type, handler, capture });
+      },
+      removeEventListener(type, handler, capture) {
+        this.handlers = (this.handlers || []).filter(
+          (entry) => !(entry.type === type && entry.handler === handler && entry.capture === capture)
+        );
+      },
+      contains: () => true,
+    },
+    chrome: {
+      runtime: {
+        id: 'test-extension-id',
+        onMessage: {
+          addListener(listener) { messageListeners.add(listener); },
+          removeListener(listener) { messageListeners.delete(listener); },
+        },
+        sendMessage: () => Promise.resolve({ ok: true }),
+      },
+    },
+    vt: (key) => key,
+    viIsEditable: (el) => !!(el && el.editable),
+    viIsNativeTextInput: (el) => el instanceof FakeInputElement,
+    viDeepActiveElement: () => null,
+    viIsAttached: (el) => !!el,
+    viSelectionFor: () => null,
+    viIsFrameElement: () => false,
+    viDocumentFor: () => 'doc',
+    viInsertText: () => ({ ok: true }),
+    viMakeToast() {},
+  });
+
+  loadClassicScript('src/common/messages.js', context);
+  loadClassicScript('src/content/content.js', context);
+
+  const afterFirst = context.document.handlers.length;
+  assert.equal(messageListeners.size, 1);
+  assert.ok(afterFirst > 0);
+
+  // The background re-injects into a tab whose instance was orphaned. Both
+  // copies share this isolated world, and two live instances would double every
+  // toast and every insertion.
+  loadClassicScript('src/content/content.js', context);
+
+  assert.equal(context.document.handlers.length, afterFirst);
+  assert.equal(messageListeners.size, 1);
+});
+
 function insertText(harness) {
   let response;
   harness.messageListener({
