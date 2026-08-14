@@ -148,6 +148,47 @@ async function applyRuntimeMode() {
   }
 }
 
+// The keyboard shortcut has no surface of its own, so a failed start would
+// otherwise be completely silent. Mark the toolbar icon instead, and put the
+// reason in its tooltip. Both are scoped to the tab the failure happened on.
+const FAILURE_BADGE_TEXT = '!';
+const FAILURE_BADGE_COLOR = '#b91c1c';
+
+function localizedMessage(key) {
+  try {
+    return chrome.i18n.getMessage(key) || '';
+  } catch (_) {
+    return '';
+  }
+}
+
+function startFailureMessage(error) {
+  if (error === 'no-target') return localizedMessage('pickerNoTarget');
+  if (error === 'content-unavailable' || error === 'no-active-tab') return localizedMessage('pageUnavailable');
+  if (error === 'side-panel-disabled') return localizedMessage('sidePanelModeDisabled');
+  return localizedMessage('errUnknown');
+}
+
+async function clearStartFailure(tabId) {
+  if (typeof tabId !== 'number') return;
+  await ignoreFailure(chrome.action.setBadgeText({ text: '', tabId }));
+  await ignoreFailure(chrome.action.setTitle({ title: localizedMessage('extName'), tabId }));
+}
+
+async function reportCommandResult(tabId, result) {
+  if (typeof tabId !== 'number') return;
+  if (result && result.ok) {
+    await clearStartFailure(tabId);
+    return;
+  }
+  await ignoreFailure(chrome.action.setBadgeText({ text: FAILURE_BADGE_TEXT, tabId }));
+  await ignoreFailure(chrome.action.setBadgeBackgroundColor({ color: FAILURE_BADGE_COLOR, tabId }));
+  await ignoreFailure(chrome.action.setTitle({
+    title: startFailureMessage(result && result.error),
+    tabId,
+  }));
+}
+
 async function getActiveTabFrame(originTabId) {
   try {
     if (typeof originTabId === 'number' && originTabId >= 0) {
@@ -611,10 +652,19 @@ chrome.commands.onCommand.addListener(async (command) => {
     return;
   }
 
-  if (await getSidePanelModeEnabled()) {
-    await startSidePanelRecognitionFlow(undefined, { openPanel: true });
-  } else {
-    await startContentRecognitionFlow();
+  const tabFrame = await getActiveTabFrame();
+  const result = (await getSidePanelModeEnabled())
+    ? await startSidePanelRecognitionFlow(undefined, { openPanel: true })
+    : await startContentRecognitionFlow();
+
+  await reportCommandResult(tabFrame && tabFrame.tabId, result);
+});
+
+// Reloading the tab is the fix we suggest, so stop flagging it once that
+// happens. Reading changeInfo.status needs no extra permission.
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo && changeInfo.status === 'loading') {
+    clearStartFailure(tabId);
   }
 });
 
