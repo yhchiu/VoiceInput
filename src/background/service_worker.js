@@ -150,7 +150,14 @@ async function applyRuntimeMode() {
 
 // The keyboard shortcut has no surface of its own, so a failed start would
 // otherwise be completely silent. Mark the toolbar icon instead, and put the
-// reason in its tooltip. Both are scoped to the tab the failure happened on.
+// reason in its tooltip.
+//
+// Every call here passes a tabId. That keeps the mark off other tabs, and it is
+// also what retires it: Chrome drops a tab-scoped badge when that tab navigates,
+// so reloading the page clears the flag without this file watching for it. A
+// global badge would neither be scoped nor self-clearing, and watching
+// tabs.onUpdated to do it by hand would wake the service worker on every tab
+// load in the browser.
 const FAILURE_BADGE_TEXT = '!';
 const FAILURE_BADGE_COLOR = '#b91c1c';
 
@@ -658,14 +665,6 @@ chrome.commands.onCommand.addListener(async (command) => {
     : await startContentRecognitionFlow();
 
   await reportCommandResult(tabFrame && tabFrame.tabId, result);
-});
-
-// Reloading the tab is the fix we suggest, so stop flagging it once that
-// happens. Reading changeInfo.status needs no extra permission.
-chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (changeInfo && changeInfo.status === 'loading') {
-    clearStartFailure(tabId);
-  }
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {

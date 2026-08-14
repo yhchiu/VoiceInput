@@ -111,8 +111,8 @@ function loadServiceWorker({ tabReplies = [], injectSucceeds = true, sidePanelMo
     pressShortcut() {
       return commandListener('toggle-recognition');
     },
-    reloadTab(tabId) {
-      return tabUpdatedListener(tabId, { status: 'loading' });
+    watchesAllTabs() {
+      return tabUpdatedListener !== null;
     },
   };
 }
@@ -217,15 +217,29 @@ test('a start refused for having no field says so rather than blaming the page',
   assert.equal(harness.titles.at(-1).title, 'pickerNoTarget');
 });
 
-test('reloading the tab clears the mark, since that is the fix we suggest', async () => {
-  const harness = loadServiceWorker({ tabReplies: ['unavailable'], injectSucceeds: false });
-  await harness.pressShortcut();
-  assert.equal(harness.badges.at(-1).text, '!');
+test('every toolbar mark is scoped to a tab', async () => {
+  // Scoping is what keeps the mark off other tabs, and it is also what retires
+  // it: Chrome drops a tab-scoped badge when that tab navigates. A global badge
+  // would sit on every tab until something cleared it by hand.
+  const failed = loadServiceWorker({ tabReplies: ['unavailable'], injectSucceeds: false });
+  await failed.pressShortcut();
 
-  await harness.reloadTab(7);
+  const succeeded = loadServiceWorker({ tabReplies: [{ ok: true }] });
+  await succeeded.pressShortcut();
 
-  assert.equal(harness.badges.at(-1).text, '');
-  assert.equal(harness.badges.at(-1).tabId, 7);
+  const marks = [...failed.badges, ...failed.titles, ...succeeded.badges, ...succeeded.titles];
+  assert.ok(marks.length > 0);
+  for (const mark of marks) {
+    assert.equal(typeof mark.tabId, 'number', `${JSON.stringify(mark)} is not scoped to a tab`);
+  }
+});
+
+test('the service worker does not watch every tab in the browser', () => {
+  // tabs.onUpdated fires for every tab load, and each one wakes the service
+  // worker. Nothing here needs it.
+  const harness = loadServiceWorker();
+
+  assert.equal(harness.watchesAllTabs(), false);
 });
 
 test('the manifest grants the scripting permission the recovery needs', () => {
