@@ -11,6 +11,8 @@ It uses the browser Web Speech API. When Chrome returns more than one possible r
 - Start or stop voice input with `Ctrl+Shift+Y`.
 - On Mac, use `Command+Shift+Y`.
 - Works with normal text fields, text areas, and many rich-text editors.
+- Works with Google Docs.
+- Works with editors that keep their editing area inside a same-origin frame, and with fields inside a shadow DOM.
 - Supports React-controlled input fields.
 - Can ask Chrome for 1 to 10 possible speech results.
 - Shows a picker when there is more than one result.
@@ -103,7 +105,8 @@ To change the keyboard shortcut, open `chrome://extensions/shortcuts`.
 - Chrome speech recognition often sends audio to a Google service. It may not work on blocked or restricted networks.
 - Chrome may return fewer alternatives than you request.
 - Some complex editors, such as Monaco, CodeMirror, Slate, ProseMirror, and Lexical, may not accept inserted text correctly.
-- Cross-origin iframes are not supported.
+- Editing areas inside cross-origin iframes are not supported. Same-origin iframes work.
+- After the extension is updated or reloaded, tabs that were already open need a refresh before voice input works in them again.
 
 ## Privacy
 
