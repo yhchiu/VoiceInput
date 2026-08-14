@@ -37,15 +37,35 @@
     return null;
   }
 
+  // Reloading or updating the extension orphans the content scripts already
+  // running in open tabs. Their chrome.runtime then throws "Extension context
+  // invalidated" synchronously, which a promise catch does not contain, so every
+  // focus change in the page raised an uncaught error until the tab reloaded.
+  function extensionAlive() {
+    try {
+      return !!(chrome.runtime && chrome.runtime.id);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function sendToBackground(message) {
+    if (!extensionAlive()) return Promise.resolve(null);
+    try {
+      const sent = chrome.runtime.sendMessage(message);
+      return sent && typeof sent.catch === 'function' ? sent.catch(() => null) : Promise.resolve(sent);
+    } catch (_) {
+      return Promise.resolve(null);
+    }
+  }
+
   function notifyPageTargetFocused() {
-    chrome.runtime
-      .sendMessage({
-        target: TARGETS.BACKGROUND,
-        source: TARGETS.CONTENT,
-        action: MSG.PAGE_TARGET_FOCUSED,
-        focusedAt: Date.now(),
-      })
-      .catch(() => {});
+    sendToBackground({
+      target: TARGETS.BACKGROUND,
+      source: TARGETS.CONTENT,
+      action: MSG.PAGE_TARGET_FOCUSED,
+      focusedAt: Date.now(),
+    });
   }
 
   function rememberEditableTarget(el, notify = true) {
@@ -128,14 +148,12 @@
   }
 
   function notifyPickerClosed(pickerId) {
-    chrome.runtime
-      .sendMessage({
-        target: TARGETS.BACKGROUND,
-        source: TARGETS.CONTENT,
-        action: MSG.PICKER_CLOSED,
-        pickerId,
-      })
-      .catch(() => {});
+    sendToBackground({
+      target: TARGETS.BACKGROUND,
+      source: TARGETS.CONTENT,
+      action: MSG.PICKER_CLOSED,
+      pickerId,
+    });
   }
 
   function showListeningIndicator() {
@@ -154,13 +172,11 @@
 
   function rememberRecentResult(text) {
     if (typeof text !== 'string' || !text.trim()) return;
-    chrome.runtime
-      .sendMessage({
-        target: TARGETS.BACKGROUND,
-        action: MSG.SET_RECENT_RESULT,
-        text,
-      })
-      .catch(() => {});
+    sendToBackground({
+      target: TARGETS.BACKGROUND,
+      action: MSG.SET_RECENT_RESULT,
+      text,
+    });
   }
 
   function copyTextFallback(text) {
@@ -318,9 +334,7 @@
       activeRecognizer = null;
     }
     activeSessionId = null;
-    chrome.runtime
-      .sendMessage({ target: TARGETS.BACKGROUND, action: MSG.RECOGNITION_ENDED })
-      .catch(() => {});
+    sendToBackground({ target: TARGETS.BACKGROUND, action: MSG.RECOGNITION_ENDED });
   }
 
   async function startRecognition(sessionId) {
@@ -328,9 +342,7 @@
 
     if (!captureForRecognition()) {
       globalThis.viMakeToast(t('pickerNoTarget'));
-      chrome.runtime
-        .sendMessage({ target: TARGETS.BACKGROUND, action: MSG.RECOGNITION_ENDED })
-        .catch(() => {});
+      sendToBackground({ target: TARGETS.BACKGROUND, action: MSG.RECOGNITION_ENDED });
       return;
     }
 

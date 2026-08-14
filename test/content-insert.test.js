@@ -16,7 +16,7 @@ class FakeTextAreaElement extends FakeInputElement {}
 
 const topDocument = 'top-document';
 
-function loadContent(initialActiveElement) {
+function loadContent(initialActiveElement, options = {}) {
   let messageListener = null;
   let activeElement = initialActiveElement;
   const sentMessages = [];
@@ -44,12 +44,18 @@ function loadContent(initialActiveElement) {
     },
     chrome: {
       runtime: {
+        // An orphaned content script has no runtime id, and its sendMessage
+        // throws synchronously rather than rejecting.
+        get id() {
+          return options.contextInvalidated ? undefined : 'test-extension-id';
+        },
         onMessage: {
           addListener(listener) {
             messageListener = listener;
           },
         },
         sendMessage(message) {
+          if (options.sendThrows) throw new Error('Extension context invalidated.');
           sentMessages.push(message);
           return Promise.resolve({ ok: true });
         },
@@ -134,6 +140,32 @@ test('content INSERT_TEXT inserts into the current editable target without savin
   assert.equal(harness.inserted[0].text, 'phrase');
   assert.equal(harness.inserted[0].saved.start, 2);
   assert.equal(harness.inserted[0].saved.end, 4);
+  assert.equal(harness.sentMessages.length, 0);
+});
+
+test('content reports a focused field to the background', () => {
+  const harness = loadContent(null);
+
+  harness.focus(new FakeInputElement('hello'));
+
+  assert.equal(harness.sentMessages.length, 1);
+  assert.equal(harness.sentMessages[0].action, harness.context.VI_MSG.PAGE_TARGET_FOCUSED);
+});
+
+test('content stays silent once the extension context is invalidated', () => {
+  const harness = loadContent(null, { contextInvalidated: true, sendThrows: true });
+
+  // Reloading the extension orphans this script. Every focus change used to
+  // raise an uncaught "Extension context invalidated" error in the page.
+  assert.doesNotThrow(() => harness.focus(new FakeInputElement('hello')));
+  assert.equal(harness.sentMessages.length, 0);
+});
+
+test('content contains a send that throws after the liveness check passes', () => {
+  // The context can be torn down between the check and the call.
+  const harness = loadContent(null, { sendThrows: true });
+
+  assert.doesNotThrow(() => harness.focus(new FakeInputElement('hello')));
   assert.equal(harness.sentMessages.length, 0);
 });
 
