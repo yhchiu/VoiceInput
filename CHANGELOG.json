@@ -1,5 +1,91 @@
 [
   {
+    "version": "1.2.0",
+    "date": "2026-08-15",
+    "items": [
+      {
+        "commit": "09366a94b2c4f667952d4b5ece2bdead819a31b4",
+        "type": "fix",
+        "subject": "fix(background): open the side panel while the shortcut gesture is live"
+      },
+      {
+        "commit": "812d515a5393268b1c0808c0b0ab0643e177153a",
+        "type": "fix",
+        "subject": "fix(background): close three silent failures on the shortcut path"
+      },
+      {
+        "commit": "326fcade1d651ee4a0942d5ab9ff951d7dd90076",
+        "type": "perf",
+        "subject": "perf(background): stop watching every tab to clear the failure badge"
+      },
+      {
+        "commit": "5b03eb8d6576027523f3462ff89032ebd151380d",
+        "type": "feat",
+        "subject": "feat(background): flag a failed shortcut start on the toolbar icon"
+      },
+      {
+        "commit": "3b6176636aaf4fc80a1550d0748b4afe02e494a1",
+        "type": "fix",
+        "subject": "fix(popup): report a failed start instead of closing silently"
+      },
+      {
+        "commit": "5febc20eaa2b30c534b95e814612a42b8ccc7be0",
+        "type": "feat",
+        "subject": "feat(background): recover orphaned tabs by re-injecting the content script"
+      },
+      {
+        "commit": "bc796bf7dba5c6add4b6b6748fda2f5c11ff3687",
+        "type": "docs",
+        "subject": "docs: record Google Docs and frame editor support"
+      },
+      {
+        "commit": "68301f2ba1dd56eadb9a7a9a7b1deaf95d66704d",
+        "type": "fix",
+        "subject": "fix(content): contain \"Extension context invalidated\" errors"
+      },
+      {
+        "commit": "902b5fce5cc0bc055b964e07a9d922e866f0167e",
+        "type": "fix",
+        "subject": "fix(sidepanel): load inserter.js, which picker.js now depends on"
+      },
+      {
+        "commit": "238c7aaa681f15183b8f1c5084d8282162ba5fe3",
+        "type": "fix",
+        "subject": "fix(content): route picker keys and anchoring through the target frame"
+      },
+      {
+        "commit": "07de322dcdbd09b5229bee01d3ed7d26066b83f1",
+        "type": "feat",
+        "subject": "feat(content): insert into Google Docs through its paste handler"
+      },
+      {
+        "commit": "34397973a785ffc982792ad80f8a2be9190f7ff3",
+        "type": "fix",
+        "subject": "fix(content): stop dictating into a field the user has left"
+      },
+      {
+        "commit": "c4991c60065dbb0222763a3bd37fdf20c5053117",
+        "type": "feat",
+        "subject": "feat(content): resolve editable targets across shadow DOM and frames"
+      },
+      {
+        "commit": "f80e5e68a2d5776191262c47bf093523ff2d2e88",
+        "type": "feat",
+        "subject": "feat(scripts): add version bump argument to git-log-json.sh"
+      },
+      {
+        "commit": "5befc19ab29bcc6d3178d01778e8b7647b7c83ff",
+        "type": "docs",
+        "subject": "docs: update screenshots"
+      },
+      {
+        "commit": "0559e9e0bc7f3bd89d82c80812596d470cfb528c",
+        "type": "docs",
+        "subject": "docs: add link to Chrome Web Store at README.md for easy installation"
+      }
+    ]
+  },
+  {
     "version": "1.1.2",
     "date": "2026-07-11",
     "items": [
